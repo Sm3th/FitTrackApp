@@ -1,0 +1,45 @@
+{
+  "name": "FitTrack Pro",
+  "short_name": "FitTrack",
+  "description": "Your Personal Fitness Companion — track workouts, nutrition, and progress.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Workout",
+      "short_name": "Workout",
+      "url": "/workout",
+      "description": "Start a new workout session"
+    },
+    {
+      "name": "Workout History",
+      "short_name": "History",
+      "url": "/workout-history",
+      "description": "View past workouts"
+    },
+    {
+      "name": "Statistics",
+      "short_name": "Stats",
+      "url": "/stats",
+      "description": "View your progress charts"
+    }
+  ],
+  "categories": ["fitness", "health", "sports"]
+}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="description" content="FitTrack Pro — Track workouts, measure progress, and crush your fitness goals." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="FitTrack" />
+    <link rel="manifest" href="/manifest.json" />
+    <!-- Font loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+    <!-- DNS prefetch for API -->
+    <link rel="dns-prefetch" href="http://localhost:3000" />
+
+    <!-- iOS PWA splash / icon -->
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+
+    <!-- Open Graph / Social sharing -->
+    <meta property="og:title" content="FitTrack Pro — Your Fitness Companion" />
+    <meta property="og:description" content="Track workouts, nutrition, and progress with premium analytics." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    <title>FitTrack Pro — Your Fitness Companion</title>
+  </head>
+  <body>
+    <!-- Anti-FOUC: apply theme/font BEFORE React renders -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          if (t === 'dark') document.documentElement.classList.add('dark');
+
+          var ct = localStorage.getItem('colorTheme') || 'blue';
+          document.documentElement.setAttribute('data-color-theme', ct);
+
+          var fs = localStorage.getItem('fontSize') || 'medium';
+          if (fs !== 'medium') document.documentElement.setAttribute('data-font-size', fs);
+        } catch (e) {}
+      })();
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

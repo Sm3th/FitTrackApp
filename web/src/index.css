@@ -1,0 +1,312 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Design Tokens ─────────────────────────────────── */
+@layer base {
+  :root {
+    --radius: 0.75rem;
+
+    /* Color theme defaults (blue) */
+    --p-from: #3b82f6;
+    --p-to:   #6366f1;
+    --p-500:  #3b82f6;
+    --p-600:  #2563eb;
+    --p-text: #2563eb;
+    --p-ring: rgba(59,130,246,0.4);
+    --p-shadow: rgba(59,130,246,0.25);
+  }
+
+  /* ── Color themes via data attribute ──────────────── */
+  [data-color-theme="orange"] {
+    --p-from:   #f97316;
+    --p-to:     #ef4444;
+    --p-500:    #f97316;
+    --p-600:    #ea580c;
+    --p-text:   #ea580c;
+    --p-ring:   rgba(249,115,22,0.4);
+    --p-shadow: rgba(249,115,22,0.25);
+  }
+  [data-color-theme="purple"] {
+    --p-from:   #8b5cf6;
+    --p-to:     #ec4899;
+    --p-500:    #8b5cf6;
+    --p-600:    #7c3aed;
+    --p-text:   #7c3aed;
+    --p-ring:   rgba(139,92,246,0.4);
+    --p-shadow: rgba(139,92,246,0.25);
+  }
+  [data-color-theme="green"] {
+    --p-from:   #10b981;
+    --p-to:     #14b8a6;
+    --p-500:    #10b981;
+    --p-600:    #059669;
+    --p-text:   #059669;
+    --p-ring:   rgba(16,185,129,0.4);
+    --p-shadow: rgba(16,185,129,0.25);
+  }
+
+  /* ── Font size themes ─────────────────────────────── */
+  [data-font-size="small"]  { font-size: 14px; }
+  [data-font-size="large"]  { font-size: 18px; }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv02","cv03","cv04","cv11";
+    @apply bg-gray-50 dark:bg-slate-950 text-gray-900 dark:text-gray-100;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Premium text selection */
+  ::selection {
+    background: rgba(99, 102, 241, 0.25);
+    color: inherit;
+  }
+
+  /* Headings */
+  h1, h2, h3, h4, h5, h6 {
+    font-feature-settings: "cv02","cv03","cv04","cv11";
+    letter-spacing: -0.02em;
+  }
+}
+
+/* ─── Custom Scrollbar ──────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(100,116,139,0.3); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(100,116,139,0.5); }
+
+/* ─── Utility Classes ───────────────────────────────── */
+@layer components {
+  /* Glassmorphism */
+  .glass {
+    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-700/50;
+  }
+
+  .glass-dark {
+    @apply bg-slate-950/80 backdrop-blur-xl border border-white/10;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent;
+  }
+  .gradient-text-orange {
+    @apply bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent;
+  }
+  .gradient-text-purple {
+    @apply bg-gradient-to-r from-violet-600 to-purple-500 bg-clip-text text-transparent;
+  }
+
+  /* Premium card */
+  .card {
+    @apply bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm;
+  }
+  .card-hover {
+    @apply card hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300;
+  }
+
+  /* Premium button styles — use CSS variables so color theme applies everywhere */
+  .btn-primary {
+    @apply text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 active:scale-95;
+    background: linear-gradient(to right, var(--p-from), var(--p-to));
+    box-shadow: 0 4px 14px 0 var(--p-shadow);
+  }
+  .btn-primary:hover {
+    opacity: 0.92;
+    box-shadow: 0 6px 20px 0 var(--p-ring);
+  }
+  .btn-secondary {
+    @apply bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-semibold px-6 py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-all duration-200 active:scale-95;
+  }
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-500 to-rose-600 text-white font-semibold px-6 py-3 rounded-xl hover:from-red-600 hover:to-rose-700 transition-all duration-200 shadow-lg shadow-red-500/25 active:scale-95;
+  }
+
+  /* Theme-aware focus ring */
+  .focus-primary:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--p-ring);
+  }
+
+  /* Accent link color */
+  .text-primary-themed { color: var(--p-text); }
+  .bg-primary-themed   { background: var(--p-500); }
+  .border-primary-themed { border-color: var(--p-500); }
+
+  /* Page header hero */
+  .page-hero {
+    @apply relative bg-slate-950 overflow-hidden;
+  }
+
+  /* Premium input */
+  .input-premium {
+    @apply w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+}
+
+/* ─── Animations ────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.5s ease-out forwards; }
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in { animation: fade-in 0.4s ease-out; }
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up { animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-down { animation: slide-down 0.3s ease-out; }
+
+@keyframes slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+.animate-slide-in { animation: slide-in 0.3s ease-out; }
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
+
+@keyframes bounce-in {
+  0%   { opacity: 0; transform: scale(0.3); }
+  50%  { transform: scale(1.05); }
+  70%  { transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.animate-bounce-in { animation: bounce-in 0.6s ease-out; }
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(99,102,241,0.4); }
+  50%       { box-shadow: 0 0 40px rgba(99,102,241,0.7); }
+}
+.animate-glow { animation: glow-pulse 2s ease-in-out infinite; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+.animate-float { animation: float 3s ease-in-out infinite; }
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-count { animation: count-up 0.4s ease-out; }
+
+@keyframes orb-float-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(30px, -20px) scale(1.05); }
+  66%       { transform: translate(-20px, 10px) scale(0.97); }
+}
+@keyframes orb-float-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(-25px, 15px) scale(1.03); }
+  66%       { transform: translate(20px, -10px) scale(0.98); }
+}
+.animate-orb-1 { animation: orb-float-1 8s ease-in-out infinite; }
+.animate-orb-2 { animation: orb-float-2 10s ease-in-out infinite; }
+
+/* Staggered fade-up delays */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* ─── Mobile optimizations ──────────────────────────── */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="time"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+  body { -webkit-overflow-scrolling: touch; }
+}
+
+body.no-pull-refresh { overscroll-behavior-y: contain; }
+
+/* ─── Confetti animation ─────────────────────────────── */
+@keyframes confetti-fall {
+  0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+.animate-confetti-fall {
+  animation: confetti-fall linear forwards;
+}
+
+/* ─── Dark mode overrides ───────────────────────────── */
+.dark .card { @apply border-slate-800; }
+
+/* ─── Color theme: global accent overrides ──────────── */
+/* Tailwind focus rings */
+.focus\:ring-blue-500:focus,
+.focus\:ring-2:focus {
+  --tw-ring-color: var(--p-ring) !important;
+}
+
+/* Inline progress bars that use blue */
+[data-color-theme]:not([data-color-theme="blue"]) .bg-blue-600,
+[data-color-theme]:not([data-color-theme="blue"]) .bg-blue-500,
+[data-color-theme]:not([data-color-theme="blue"]) .bg-gradient-to-r.from-blue-600,
+[data-color-theme]:not([data-color-theme="blue"]) .bg-gradient-to-r.from-blue-500 {
+  /* We can't override arbitrary Tailwind gradient classes easily.
+     The btn-primary CSS variable approach handles primary buttons.
+     For other accents, components can use the useTheme hook. */
+}
+
+/* ─── Font size inheritance ─────────────────────────── */
+/* When root font-size changes, rem-based sizes scale automatically.
+   Tailwind uses rem units, so changing html font-size cascades. */
+[data-font-size="small"]  * { letter-spacing: -0.01em; }
+[data-font-size="large"]  * { letter-spacing: 0; }
