@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
 import { PageSkeleton } from '../components/LoadingSkeleton';
 import EmptyState from '../components/EmptyState';
+import ConfettiBurst from '../components/ConfettiBurst';
 import { calculateAchievements, getRecentlyUnlocked, getNextAchievement, Achievement } from '../utils/achievements';
 import { calculateStreak, getTotalVolume } from '../utils/statsHelper';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +14,8 @@ const AchievementsPage: React.FC = () => {
   const { t } = useTranslation();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confetti, setConfetti] = useState(false);
+  const confettiFired = useRef(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -29,7 +32,16 @@ const AchievementsPage: React.FC = () => {
       const totalSets = workouts.reduce((sum: number, w: any) => sum + (w.exerciseSets?.length || 0), 0);
       const totalVolume = getTotalVolume(workouts);
       const streak = calculateStreak(workouts);
-      setAchievements(calculateAchievements({ totalWorkouts, totalSets, totalVolume, streak }));
+      const calculated = calculateAchievements({ totalWorkouts, totalSets, totalVolume, streak });
+      setAchievements(calculated);
+      // Fire confetti once per session if any achievements are unlocked
+      if (!confettiFired.current && calculated.some(a => a.unlocked)) {
+        confettiFired.current = true;
+        setTimeout(() => {
+          setConfetti(true);
+          setTimeout(() => setConfetti(false), 2800);
+        }, 400);
+      }
     } catch (error) {
       console.error('Fetch achievements error:', error);
     } finally {
@@ -71,6 +83,7 @@ const AchievementsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+      <ConfettiBurst active={confetti} count={90} />
       <Navbar />
 
       {/* Hero */}
@@ -83,16 +96,19 @@ const AchievementsPage: React.FC = () => {
           <h1 className="text-4xl font-black text-white tracking-tight mb-3">{t('achievements.title')}</h1>
           <div className="text-white/40 text-sm mb-6">{t('achievements.subtitle')}</div>
 
-          {/* Progress ring area */}
-          <div className="inline-flex items-center gap-4 bg-white/10 border border-white/15 backdrop-blur-sm rounded-2xl px-6 py-3">
-            <span className="text-4xl">🏆</span>
+          {/* Progress badge */}
+          <div className="inline-flex items-center gap-4 bg-white/10 border border-white/15 backdrop-blur-sm rounded-2xl px-6 py-3 animate-fade-up delay-200">
+            <span className="text-4xl animate-float">🏆</span>
             <div className="text-left">
-              <div className="text-2xl font-black text-white">{unlockedCount} <span className="text-white/40 font-normal text-lg">/ {totalCount}</span></div>
+              <div className="text-2xl font-black text-white tabular-nums">{unlockedCount} <span className="text-white/40 font-normal text-lg">/ {totalCount}</span></div>
               <div className="text-xs text-white/50">{completionPct}% {t('achievements.complete')}</div>
             </div>
             <div className="w-32 h-2 bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all"
-                style={{ width: `${completionPct}%` }} />
+              <div className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
+                style={{
+                  width: `${completionPct}%`,
+                  transition: 'width 1.2s cubic-bezier(0.16,1,0.3,1) 0.5s',
+                }} />
             </div>
           </div>
         </div>
@@ -155,19 +171,20 @@ const AchievementsPage: React.FC = () => {
         )}
 
         {/* All Achievements by Category */}
-        {Object.entries(groupedAchievements).map(([category, list]) => (
+        {Object.entries(groupedAchievements).map(([category, list], catIdx) => (
           <div key={category}>
             <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
               {groupMeta[category]?.icon} {groupMeta[category]?.label}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {list.map(achievement => (
+              {list.map((achievement, idx) => (
                 <div key={achievement.id}
-                  className={`rounded-2xl p-6 border transition-all ${
+                  className={`rounded-2xl p-6 border transition-all duration-300 animate-fade-up ${
                     achievement.unlocked
-                      ? `bg-gradient-to-br ${achievement.color} text-white shadow-lg border-transparent`
+                      ? `bg-gradient-to-br ${achievement.color} text-white shadow-lg border-transparent hover:scale-[1.02]`
                       : 'bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800 text-gray-400 dark:text-gray-500'
-                  }`}>
+                  }`}
+                  style={{ animationDelay: `${(catIdx * 3 + idx) * 60}ms`, animationFillMode: 'both' }}>
                   <div className={`text-5xl mb-3 ${achievement.unlocked ? 'opacity-100' : 'opacity-30'}`}>
                     {achievement.icon}
                   </div>

@@ -36,6 +36,36 @@ const features = [
 
 const getTodayKey = () => new Date().toISOString().slice(0, 10);
 
+// ── Animated ring for today's metrics ────────────────────────────────────────
+const TodayRing: React.FC<{ pct: number; color: string; trackColor: string; label: string }> = ({
+  pct, color, trackColor, label,
+}) => {
+  const size = 56;
+  const stroke = 5;
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  // Start from 0, transition to actual pct via CSS
+  return (
+    <div className="flex-shrink-0 relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        {/* Track */}
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={trackColor} strokeWidth={stroke} />
+        {/* Progress */}
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none"
+          stroke={color} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={circ}
+          strokeDashoffset={circ * (1 - pct / 100)}
+          style={{ transition: 'stroke-dashoffset 1.1s cubic-bezier(0.16,1,0.3,1) 0.3s' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-[10px] font-black tabular-nums" style={{ color }}>{label}</span>
+      </div>
+    </div>
+  );
+};
+
 const getTodayCalories = (): number => {
   try {
     const entries: { calories: number }[] = JSON.parse(localStorage.getItem(`nutrition_${getTodayKey()}`) || '[]');
@@ -267,34 +297,52 @@ const HomePage: React.FC = () => {
       {isLoggedIn && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
           <div className="grid grid-cols-2 gap-3">
-            {/* Calories today */}
+            {/* Calories today — animated ring */}
             <button onClick={() => navigate('/nutrition')}
-              className="group bg-white dark:bg-slate-900 rounded-2xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 text-left">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-base shadow-sm group-hover:scale-110 transition-transform">🥗</div>
-                <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('home.todayNutrition')}</span>
+              className="group bg-white dark:bg-slate-900 rounded-2xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm hover:-translate-y-1 hover:shadow-xl transition-all duration-300 text-left">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-base group-hover:scale-110 inline-block transition-transform">🥗</span>
+                    <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('home.todayNutrition')}</span>
+                  </div>
+                  <div className="text-2xl font-black text-gray-900 dark:text-white tabular-nums">{todayCalories.toLocaleString()}</div>
+                  <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t('home.kcalLoggedToday')}</div>
+                  {todayCalories === 0 && (
+                    <div className="mt-2 text-xs text-emerald-500 font-semibold">{t('home.startTracking')}</div>
+                  )}
+                </div>
+                {/* Animated SVG ring */}
+                <TodayRing
+                  pct={Math.min((todayCalories / 2000) * 100, 100)}
+                  color="#10b981"
+                  trackColor="rgba(16,185,129,0.12)"
+                  label={`${Math.round((todayCalories / 2000) * 100)}%`}
+                />
               </div>
-              <div className="text-2xl font-black text-gray-900 dark:text-white">{todayCalories.toLocaleString()}</div>
-              <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t('home.kcalLoggedToday')}</div>
-              {todayCalories === 0 && (
-                <div className="mt-2 text-xs text-emerald-500 font-semibold">{t('home.startTracking')}</div>
-              )}
             </button>
 
-            {/* Water today */}
+            {/* Water today — animated ring */}
             <button onClick={() => navigate('/water')}
-              className="group bg-white dark:bg-slate-900 rounded-2xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 text-left">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-base shadow-sm group-hover:scale-110 transition-transform">💧</div>
-                <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('home.waterToday')}</span>
-              </div>
-              <div className="text-2xl font-black text-gray-900 dark:text-white">
-                {todayWater.current}<span className="text-sm font-normal text-gray-400 ml-0.5">/{todayWater.goal} ml</span>
-              </div>
-              <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t('home.waterConsumed')}</div>
-              <div className="mt-2 h-1 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min((todayWater.current / todayWater.goal) * 100, 100)}%` }}/>
+              className="group bg-white dark:bg-slate-900 rounded-2xl p-5 border border-gray-100 dark:border-slate-800 shadow-sm hover:-translate-y-1 hover:shadow-xl transition-all duration-300 text-left">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-base group-hover:scale-110 inline-block transition-transform">💧</span>
+                    <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{t('home.waterToday')}</span>
+                  </div>
+                  <div className="text-2xl font-black text-gray-900 dark:text-white tabular-nums">
+                    {todayWater.current}<span className="text-sm font-normal text-gray-400 ml-0.5">ml</span>
+                  </div>
+                  <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t('home.waterConsumed')}</div>
+                </div>
+                {/* Animated SVG ring */}
+                <TodayRing
+                  pct={Math.min((todayWater.current / todayWater.goal) * 100, 100)}
+                  color="#06b6d4"
+                  trackColor="rgba(6,182,212,0.12)"
+                  label={`${Math.round((todayWater.current / todayWater.goal) * 100)}%`}
+                />
               </div>
             </button>
           </div>
@@ -307,11 +355,11 @@ const HomePage: React.FC = () => {
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">{t('home.quickAccess')}</h2>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 stagger-children">
             {quickLinks.map(item => (
               <button key={item.path} onClick={() => navigate(item.path)}
-                className={`group bg-gradient-to-br ${item.grad} text-white rounded-2xl p-5 text-left hover:opacity-90 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-300 active:scale-95`}>
-                <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300">{item.icon}</div>
+                className={`group bg-gradient-to-br ${item.grad} text-white rounded-2xl p-5 text-left hover:opacity-90 hover:shadow-xl transition-all duration-300 active:scale-95 card-lift ripple-container`}>
+                <div className="text-3xl mb-3 icon-hover">{item.icon}</div>
                 <div className="font-bold text-sm leading-tight">{item.label}</div>
               </button>
             ))}
@@ -348,14 +396,13 @@ const HomePage: React.FC = () => {
             {t('home.everythingSubtitle')}
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {features.map((f, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 stagger-children">
+          {features.map((f) => (
             <div key={f.title}
-              className="group bg-white dark:bg-slate-900 rounded-2xl p-7 border border-gray-100 dark:border-slate-800 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+              className="group bg-white dark:bg-slate-900 rounded-2xl p-7 border border-gray-100 dark:border-slate-800 card-lift"
               onMouseEnter={e => { e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--p-500) 40%, transparent)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = ''; }}
-              style={{ animationDelay: `${i * 80}ms` }}>
-              <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">{f.icon}</div>
+              onMouseLeave={e => { e.currentTarget.style.borderColor = ''; }}>
+              <div className="text-4xl mb-4 icon-hover inline-block">{f.icon}</div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{f.title}</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{f.desc}</p>
             </div>
