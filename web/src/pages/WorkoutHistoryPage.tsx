@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
 import EmptyState from '../components/EmptyState';
 import { ListSkeleton } from '../components/LoadingSkeleton';
@@ -55,8 +55,7 @@ const WorkoutHistoryPage: React.FC = () => {
   const fetchWorkouts = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const { data } = await axios.get('http://localhost:3000/api/workouts/sessions', { headers: { Authorization: `Bearer ${token}` } });
+      const { data } = await apiClient.get('/workouts/sessions');
       setWorkouts(data.data || []);
     } catch { /* ignore */ } finally { setLoading(false); }
   };

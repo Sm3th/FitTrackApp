@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
 import { calculateXP, getLevelInfo } from '../utils/statsHelper';
 
@@ -242,10 +242,7 @@ const DailyChallengesPage: React.FC = () => {
 
   const fetchWorkouts = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3000/api/workouts/sessions', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiClient.get('/workouts/sessions');
       setWorkouts(response.data.data || []);
     } catch (error) {
       console.error(error);

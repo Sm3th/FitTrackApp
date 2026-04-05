@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import apiClient from '../services/api';
 import ExerciseSelector from './ExerciseSelector';
 import RestTimer from './RestTimer';
 import Toast from './Toast';
@@ -87,19 +87,14 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId }) => {
     setNoteInput('');
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        'http://localhost:3000/api/workouts/sets',
-        {
-          workoutSessionId,
-          exerciseId: currentExercise.id,
-          setNumber: newSet.setNumber,
-          reps: newSet.reps,
-          weight: newSet.weight,
-          notes: newSet.notes,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await apiClient.post('/workouts/sets', {
+        workoutSessionId,
+        exerciseId: currentExercise.id,
+        setNumber: newSet.setNumber,
+        reps: newSet.reps,
+        weight: newSet.weight,
+        notes: newSet.notes,
+      });
       if (pr) {
         showToast('🏆 New Personal Record!', 'success');
       } else {

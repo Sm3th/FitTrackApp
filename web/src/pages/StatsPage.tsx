@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../services/api';
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -57,10 +57,7 @@ const StatsPage: React.FC = () => {
   const fetchWorkouts = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3000/api/workouts/sessions', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiClient.get('/workouts/sessions');
       setWorkouts(response.data.data || []);
     } catch (error) {
       console.error('Fetch workouts error:', error);

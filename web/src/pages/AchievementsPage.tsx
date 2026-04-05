@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
 import EmptyState from '../components/EmptyState';
 import { calculateAchievements, getRecentlyUnlocked, getNextAchievement, Achievement } from '../utils/achievements';
@@ -22,10 +22,7 @@ const AchievementsPage: React.FC = () => {
   const fetchAchievements = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3000/api/workouts/sessions', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiClient.get('/workouts/sessions');
       const workouts = response.data.data || [];
       const totalWorkouts = workouts.length;
       const totalSets = workouts.reduce((sum: number, w: any) => sum + (w.exerciseSets?.length || 0), 0);

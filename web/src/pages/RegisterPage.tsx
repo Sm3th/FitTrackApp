@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../services/api';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
 import { useTranslation } from 'react-i18next';
@@ -34,7 +34,7 @@ export const RegisterPage: React.FC = () => {
     }
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:3000/api/auth/register', {
+      const response = await apiClient.post('/auth/register', {
         email: formData.email, username: formData.username,
         password: formData.password, fullName: formData.fullName,
       });

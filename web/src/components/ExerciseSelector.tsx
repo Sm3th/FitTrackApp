@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../services/api';
 
 interface Exercise {
   id: string;
@@ -58,7 +58,7 @@ const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
   const fetchExercises = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:3000/api/exercises');
+      const response = await apiClient.get('/exercises');
       setExercises(response.data.data);
       setFilteredExercises(response.data.data);
     } catch (error) {

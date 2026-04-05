@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../services/api';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
 import { getPlanById, WorkoutPlan } from '../data/workoutPlans';
@@ -51,12 +51,10 @@ const GuidedWorkoutPage: React.FC = () => {
 
   const startWorkoutSession = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      const response = await axios.post(
-        'http://localhost:3000/api/workouts/sessions/start',
-        { name: plan?.name || 'Guided Workout', notes: `Workout Plan: ${plan?.id}` },
-        { headers: { Authorization: `Bearer ${token}` } }
+      if (!localStorage.getItem('token')) return;
+      const response = await apiClient.post(
+        '/workouts/sessions/start',
+        { name: plan?.name || 'Guided Workout', notes: `Workout Plan: ${plan?.id}` }
       );
       setWorkoutSessionId(response.data.data.id);
       startTimeRef.current = new Date();
@@ -120,13 +118,8 @@ const GuidedWorkoutPage: React.FC = () => {
     setPhase('completed');
     soundEffects.workoutComplete();
     try {
-      const token = localStorage.getItem('token');
-      if (workoutSessionId && token) {
-        await axios.patch(
-          `http://localhost:3000/api/workouts/sessions/${workoutSessionId}/end`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+      if (workoutSessionId && localStorage.getItem('token')) {
+        await apiClient.patch(`/workouts/sessions/${workoutSessionId}/end`, {});
       }
       showToast(t('guided.crushedIt') + '! 🏆', 'success');
     } catch (error) {

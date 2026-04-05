@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
 import { useCountUp } from '../hooks/useCountUp';
 import { useTranslation } from 'react-i18next';
@@ -72,10 +72,7 @@ const HomePage: React.FC = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const { data } = await axios.get('http://localhost:3000/api/workouts/sessions', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await apiClient.get('/workouts/sessions');
       const workouts = data.data || [];
       setStats({
         totalWorkouts: workouts.length,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
 import ActiveWorkout from '../components/ActiveWorkout';
 import WorkoutTimer from '../components/WorkoutTimer';
@@ -46,10 +46,9 @@ const WorkoutPage: React.FC = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       if (!token) { showToast('Please login first', 'error'); navigate('/login'); return; }
-      const response = await axios.post(
-        'http://localhost:3000/api/workouts/sessions/start',
-        { name: workoutName || 'Workout Session', notes: '' },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await apiClient.post(
+        '/workouts/sessions/start',
+        { name: workoutName || 'Workout Session', notes: '' }
       );
       setActiveWorkout(response.data.data);
       setWorkoutName('');
@@ -77,8 +76,7 @@ const WorkoutPage: React.FC = () => {
     setShowRatingModal(false);
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      await axios.patch(`http://localhost:3000/api/workouts/sessions/${activeWorkout.id}/end`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      await apiClient.patch(`/workouts/sessions/${activeWorkout.id}/end`, {});
       soundEffects.workoutComplete();
       haptics.workoutComplete();
       showToast('Workout completed! Amazing work! 🎉', 'success');

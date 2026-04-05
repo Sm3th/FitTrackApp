@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../services/api';
 import EmptyState from './EmptyState';
 import { CardSkeleton } from './LoadingSkeleton';
 
@@ -35,7 +35,7 @@ export const ExerciseList: React.FC = () => {
   const fetchExercises = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:3000/api/exercises');
+      const response = await apiClient.get('/exercises');
       setExercises(response.data.data);
       setFilteredExercises(response.data.data);
     } catch (error) {
