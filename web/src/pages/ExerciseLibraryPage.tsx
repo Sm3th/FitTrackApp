@@ -1,7 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useDebounce } from '../hooks/useDebounce';
 import Navbar from '../components/Navbar';
+import apiClient from '../services/api';
+import {
+  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+} from 'recharts';
 
 interface Exercise {
   id: string;
@@ -148,6 +153,118 @@ const MUSCLE_COLORS: Record<string, string> = {
   Core: 'bg-yellow-500', Cardio: 'bg-cyan-500',
 };
 
+interface PRDataPoint { date: string; weight: number; reps: number; }
+
+// ── Exercise Detail Content (shared between sidebar + mobile modal) ─────────
+interface DetailProps {
+  exercise: Exercise;
+  prData: PRDataPoint[];
+  prLoading: boolean;
+  isLoggedIn: boolean;
+  onClose: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: TFunction<'translation', undefined>;
+}
+
+const ExerciseDetailContent = React.memo<DetailProps>(({ exercise, prData, prLoading, isLoggedIn, onClose, t: tFunc }) => {
+  const t = tFunc as (key: string, fallback?: string) => string;
+  const pr = prData.length > 0 ? Math.max(...prData.map(d => d.weight)) : null;
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 sticky top-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className={`w-12 h-12 ${MUSCLE_COLORS[exercise.muscleGroup] || 'bg-gray-400'} rounded-xl flex items-center justify-center text-2xl`}>
+          {exercise.icon}
+        </div>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl transition-colors">✕</button>
+      </div>
+
+      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">{exercise.name}</h2>
+      <div className="flex gap-2 mb-4">
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLORS[exercise.difficulty]}`}>
+          {exercise.difficulty}
+        </span>
+        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300">
+          {exercise.muscleGroup}
+        </span>
+      </div>
+
+      <div className="mb-4">
+        <div className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+          🏋️ {t('library.equipment')}
+        </div>
+        <p className="text-sm text-gray-700 dark:text-gray-300">{exercise.equipment}</p>
+      </div>
+
+      <div className="mb-5">
+        <div className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+          📖 {t('library.howTo')}
+        </div>
+        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{exercise.description}</p>
+      </div>
+
+      <div className="mb-5">
+        <div className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+          💡 {t('library.proTips')}
+        </div>
+        <ul className="space-y-2">
+          {exercise.tips.map((tip, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <span className="text-orange-500 font-bold shrink-0">{i + 1}.</span>
+              {tip}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* PR History */}
+      {isLoggedIn && (
+        <div className="border-t border-gray-100 dark:border-slate-800 pt-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">🏆 Personal Record</div>
+            {pr && <span className="text-sm font-black text-orange-500">{pr} kg</span>}
+          </div>
+          {prLoading ? (
+            <div className="h-24 flex items-center justify-center">
+              <svg className="w-5 h-5 animate-spin text-orange-500" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+              </svg>
+            </div>
+          ) : prData.length >= 2 ? (
+            <ResponsiveContainer width="100%" height={120}>
+              <LineChart data={prData} margin={{ top: 4, right: 4, left: -32, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(249,115,22,0.08)" />
+                <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
+                <Tooltip
+                  contentStyle={{ background: '#1e293b', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 8, fontSize: 11 }}
+                  labelStyle={{ color: '#94a3b8', fontWeight: 600 }}
+                  itemStyle={{ color: '#fdba74' }}
+                  formatter={(v: number) => [`${v} kg`, 'Best set']} />
+                <Line type="monotone" dataKey="weight" stroke="#f97316" strokeWidth={2.5}
+                  dot={{ r: 3, fill: '#f97316', strokeWidth: 0 }}
+                  activeDot={{ r: 5 }}
+                  isAnimationActive animationDuration={800} animationEasing="ease-out" />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : prData.length === 1 ? (
+            <div className="text-center py-4 text-sm text-gray-400">
+              <div className="text-2xl mb-1">🌱</div>
+              <p>First set logged: <strong className="text-orange-500">{prData[0].weight} kg × {prData[0].reps}</strong></p>
+              <p className="text-xs mt-1">Log more sessions to see progress</p>
+            </div>
+          ) : (
+            <div className="text-center py-4 text-xs text-gray-400 dark:text-slate-500">
+              No sets logged yet — start a workout to track your progress
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+});
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 const ExerciseLibraryPage: React.FC = () => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
@@ -160,6 +277,43 @@ const ExerciseLibraryPage: React.FC = () => {
     return t(`library.${key.toLowerCase()}` as any, key);
   };
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [prData, setPrData] = useState<PRDataPoint[]>([]);
+  const [prLoading, setPrLoading] = useState(false);
+  const isLoggedIn = !!localStorage.getItem('token');
+
+  const fetchPRHistory = useCallback(async (exerciseName: string) => {
+    if (!isLoggedIn) return;
+    try {
+      setPrLoading(true);
+      const res = await apiClient.get('/workouts/sessions');
+      const sessions: any[] = res.data.data || [];
+      const points: PRDataPoint[] = [];
+      for (const session of sessions) {
+        for (const set of (session.exerciseSets || [])) {
+          const name: string = set.exercise?.name || set.exerciseName || '';
+          if (name.toLowerCase() === exerciseName.toLowerCase() && set.weight && set.reps) {
+            points.push({
+              date: new Date(session.startTime).toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+              weight: set.weight,
+              reps: set.reps,
+            });
+          }
+        }
+      }
+      // Keep best set per date (max weight)
+      const byDate = new Map<string, PRDataPoint>();
+      for (const p of points) {
+        const existing = byDate.get(p.date);
+        if (!existing || p.weight > existing.weight) byDate.set(p.date, p);
+      }
+      setPrData([...byDate.values()].slice(-10));
+    } catch { setPrData([]); } finally { setPrLoading(false); }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (selectedExercise) fetchPRHistory(selectedExercise.name);
+    else setPrData([]);
+  }, [selectedExercise, fetchPRHistory]);
 
   const debouncedSearch = useDebounce(searchQuery, 200);
 
@@ -281,62 +435,45 @@ const ExerciseLibraryPage: React.FC = () => {
             )}
           </div>
 
-          {/* Detail Panel */}
+          {/* Detail Panel — desktop sidebar */}
           {selectedExercise && (
-            <div className="lg:col-span-1">
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 sticky top-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 ${MUSCLE_COLORS[selectedExercise.muscleGroup] || 'bg-gray-400'} rounded-xl flex items-center justify-center text-2xl`}>
-                    {selectedExercise.icon}
-                  </div>
-                  <button
-                    onClick={() => setSelectedExercise(null)}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl"
-                  >✕</button>
-                </div>
-
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">{selectedExercise.name}</h2>
-                <div className="flex gap-2 mb-4">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLORS[selectedExercise.difficulty]}`}>
-                    {selectedExercise.difficulty}
-                  </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300">
-                    {selectedExercise.muscleGroup}
-                  </span>
-                </div>
-
-                <div className="mb-4">
-                  <div className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                    🏋️ {t('library.equipment')}
-                  </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">{selectedExercise.equipment}</p>
-                </div>
-
-                <div className="mb-5">
-                  <div className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                    📖 {t('library.howTo')}
-                  </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{selectedExercise.description}</p>
-                </div>
-
-                <div>
-                  <div className="flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-                    💡 {t('library.proTips')}
-                  </div>
-                  <ul className="space-y-2">
-                    {selectedExercise.tips.map((tip, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <span className="text-orange-500 font-bold shrink-0">{i + 1}.</span>
-                        {tip}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+            <div className="hidden lg:block lg:col-span-1">
+              <ExerciseDetailContent
+                exercise={selectedExercise}
+                prData={prData}
+                prLoading={prLoading}
+                isLoggedIn={isLoggedIn}
+                onClose={() => setSelectedExercise(null)}
+                t={t}
+              />
             </div>
           )}
         </div>
       </div>
+
+      {/* Mobile modal */}
+      {selectedExercise && (
+        <div className="lg:hidden fixed inset-0 z-50 flex items-end">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedExercise(null)} />
+          <div className="relative w-full bg-white dark:bg-slate-900 rounded-t-3xl max-h-[90vh] overflow-y-auto animate-fade-up">
+            <div className="sticky top-0 bg-white dark:bg-slate-900 px-5 py-3 flex items-center justify-between border-b border-gray-100 dark:border-slate-800 z-10">
+              <div className="w-10 h-1 bg-gray-300 dark:bg-slate-700 rounded-full mx-auto absolute left-1/2 -translate-x-1/2 top-2" />
+              <div className="w-8 h-8" />
+              <button onClick={() => setSelectedExercise(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-slate-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">✕</button>
+            </div>
+            <div className="p-5">
+              <ExerciseDetailContent
+                exercise={selectedExercise}
+                prData={prData}
+                prLoading={prLoading}
+                isLoggedIn={isLoggedIn}
+                onClose={() => setSelectedExercise(null)}
+                t={t}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

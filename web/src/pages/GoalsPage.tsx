@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
+import { CardSkeleton } from '../components/LoadingSkeleton';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type GoalType = 'weight' | 'strength' | 'calories' | 'workouts' | 'custom';
@@ -56,7 +57,7 @@ const TEMPLATES: Omit<Goal, 'id' | 'startDate' | 'targetDate' | 'currentValue' |
 ];
 
 // ── Sub-components ────────────────────────────────────────────────────────────
-const ProgressRing: React.FC<{ pct: number; size?: number; stroke?: number; color?: string }> = ({
+const ProgressRing = React.memo<{ pct: number; size?: number; stroke?: number; color?: string }>(({
   pct, size = 80, stroke = 8, color = 'var(--p-500)'
 }) => {
   const r = (size - stroke) / 2;
@@ -70,7 +71,7 @@ const ProgressRing: React.FC<{ pct: number; size?: number; stroke?: number; colo
         style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
     </svg>
   );
-};
+});
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const GoalsPage: React.FC = () => {
@@ -80,6 +81,7 @@ const GoalsPage: React.FC = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [pageLoading, setPageLoading] = useState(true);
   const [form, setForm] = useState<Partial<Goal>>({
     type: 'weight', emoji: '🎯', unit: 'kg',
     startDate: new Date().toISOString().slice(0, 10),
@@ -88,7 +90,10 @@ const GoalsPage: React.FC = () => {
 
   useEffect(() => {
     if (!localStorage.getItem('token')) { navigate('/login'); return; }
-    setGoals(loadGoals());
+    setTimeout(() => {
+      setGoals(loadGoals());
+      setPageLoading(false);
+    }, 400);
   }, [navigate]);
 
   const handleSave = () => {
@@ -178,8 +183,16 @@ const GoalsPage: React.FC = () => {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
+        {pageLoading ? (
+          <div className="space-y-4">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        ) : null}
+
         {/* Active goals */}
-        {activeGoals.length > 0 ? (
+        {!pageLoading && activeGoals.length > 0 ? (
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">Active Goals</h2>
             {activeGoals.map((goal, idx) => {
@@ -254,7 +267,7 @@ const GoalsPage: React.FC = () => {
               );
             })}
           </div>
-        ) : (
+        ) : !pageLoading ? (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🎯</div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No goals yet</h3>
@@ -267,10 +280,10 @@ const GoalsPage: React.FC = () => {
               Create First Goal
             </button>
           </div>
-        )}
+        ) : null}
 
         {/* Completed goals */}
-        {completedGoals.length > 0 && (
+        {!pageLoading && completedGoals.length > 0 && (
           <div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Completed 🎉</h2>
             <div className="space-y-3">

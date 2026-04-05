@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES, type LanguageCode } from '../i18n';
+import { useScrollDirection } from '../hooks/useScrollDirection';
 
 const SHORTCUTS = [
   { key: 'N', description: 'Start new workout', path: '/workout' },
@@ -110,10 +111,17 @@ const Navbar: React.FC = () => {
   ] as const;
 
   const initials = (user.username || 'U').slice(0, 2).toUpperCase();
+  const { direction, scrolled } = useScrollDirection();
+  const hidden = direction === 'down' && scrolled;
 
   return (
     <>
-      <nav className="sticky top-0 z-50 border-b border-gray-200/60 dark:border-slate-800/60 backdrop-blur-xl bg-white/85 dark:bg-slate-950/90 transition-colors duration-300">
+      <nav
+        className="sticky top-0 z-50 border-b border-gray-200/60 dark:border-slate-800/60 backdrop-blur-xl bg-white/85 dark:bg-slate-950/90 transition-colors duration-300"
+        style={{
+          transform: hidden ? 'translateY(-100%)' : 'translateY(0)',
+          transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1), background-color 0.3s, border-color 0.3s',
+        }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
 

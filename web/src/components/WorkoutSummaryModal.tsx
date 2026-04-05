@@ -61,13 +61,13 @@ const getMotivation = (sets: number, volume: number, duration: number): string =
   return 'Great session. Progress is progress! 🎯';
 };
 
-// ── Animated stat card ───────────────────────────────────────────────────���────
-const StatCard: React.FC<{
+// ── Animated stat card ────────────────────────────────────────────────────────
+const StatCard = React.memo<{
   icon: string;
   value: string;
   label: string;
   delay?: number;
-}> = ({ icon, value, label, delay = 0 }) => {
+}>(({ icon, value, label, delay = 0 }) => {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), delay);
@@ -86,7 +86,7 @@ const StatCard: React.FC<{
       <div className="text-xs text-slate-500 font-medium">{label}</div>
     </div>
   );
-};
+});
 
 // ── Main Modal ────────────────────────────────────────────────────────────────
 const WorkoutSummaryModal: React.FC<WorkoutSummaryModalProps> = ({

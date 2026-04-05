@@ -37,7 +37,7 @@ const features = [
 const getTodayKey = () => new Date().toISOString().slice(0, 10);
 
 // ── Animated ring for today's metrics ────────────────────────────────────────
-const TodayRing: React.FC<{ pct: number; color: string; trackColor: string; label: string }> = ({
+const TodayRing = React.memo<{ pct: number; color: string; trackColor: string; label: string }>(({
   pct, color, trackColor, label,
 }) => {
   const size = 56;
@@ -64,12 +64,29 @@ const TodayRing: React.FC<{ pct: number; color: string; trackColor: string; labe
       </div>
     </div>
   );
-};
+});
 
 const getTodayCalories = (): number => {
   try {
     const entries: { calories: number }[] = JSON.parse(localStorage.getItem(`nutrition_${getTodayKey()}`) || '[]');
     return entries.reduce((s, e) => s + e.calories, 0);
+  } catch { return 0; }
+};
+
+const getCalorieStreak = (): number => {
+  try {
+    let streak = 0;
+    const today = new Date();
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const key = `nutrition_${d.toISOString().slice(0, 10)}`;
+      const entries: { calories: number }[] = JSON.parse(localStorage.getItem(key) || '[]');
+      const cal = entries.reduce((s, e) => s + e.calories, 0);
+      if (cal > 0) streak++;
+      else if (i > 0) break; // allow today to be 0 without breaking
+    }
+    return streak;
   } catch { return 0; }
 };
 
@@ -90,12 +107,14 @@ const HomePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [todayCalories, setTodayCalories] = useState(0);
   const [todayWater, setTodayWater] = useState({ current: 0, goal: 8 });
+  const [calorieStreak, setCalorieStreak] = useState(0);
 
   useEffect(() => {
     if (isLoggedIn) {
       fetchStats();
       setTodayCalories(getTodayCalories());
       setTodayWater(getTodayWater());
+      setCalorieStreak(getCalorieStreak());
     }
   }, [isLoggedIn]);
 
@@ -308,9 +327,16 @@ const HomePage: React.FC = () => {
                   </div>
                   <div className="text-2xl font-black text-gray-900 dark:text-white tabular-nums">{todayCalories.toLocaleString()}</div>
                   <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t('home.kcalLoggedToday')}</div>
-                  {todayCalories === 0 && (
+                  {todayCalories === 0 ? (
                     <div className="mt-2 text-xs text-emerald-500 font-semibold">{t('home.startTracking')}</div>
-                  )}
+                  ) : calorieStreak > 1 ? (
+                    <div className="mt-2 flex items-center gap-1">
+                      <span className="text-xs">{calorieStreak >= 7 ? '🔥' : '✅'}</span>
+                      <span className={`text-xs font-bold ${calorieStreak >= 7 ? 'text-orange-500' : 'text-emerald-500'}`}>
+                        {calorieStreak}d streak
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
                 {/* Animated SVG ring */}
                 <TodayRing

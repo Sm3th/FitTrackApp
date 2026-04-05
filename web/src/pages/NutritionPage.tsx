@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
 import { useTranslation } from 'react-i18next';
+import { useSwipeDelete } from '../hooks/useSwipeDelete';
 
 // ── Barcode Scanner Component ─────────────────────────────────────────────────
 declare class BarcodeDetector {
@@ -205,6 +206,47 @@ const MacroRing: React.FC<{ value: number; goal: number; color: string; label: s
     </div>
   );
 };
+
+// ── Swipeable food entry row ──────────────────────────────────────────────────
+const FoodEntryRow = React.memo<{ entry: FoodEntry; onDelete: () => void }>(({ entry, onDelete }) => {
+  const { rowStyle, revealed, onTouchStart, onTouchMove, onTouchEnd } = useSwipeDelete({ onDelete, threshold: 75 });
+  return (
+    <div className="relative overflow-hidden">
+      {/* Delete background revealed on swipe */}
+      <div className={`absolute inset-y-0 right-0 flex items-center px-5 bg-red-500 transition-opacity duration-200 ${revealed ? 'opacity-100' : 'opacity-0'}`}>
+        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+        </svg>
+      </div>
+      {/* Row content */}
+      <div
+        className="relative flex items-center gap-3 px-5 py-3 bg-white dark:bg-slate-900"
+        style={rowStyle}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{entry.name}</p>
+          <div className="flex gap-3 mt-0.5">
+            <span className="text-xs text-indigo-500 font-medium">{entry.protein}g P</span>
+            <span className="text-xs text-amber-500 font-medium">{entry.carbs}g C</span>
+            <span className="text-xs text-pink-500 font-medium">{entry.fat}g F</span>
+          </div>
+        </div>
+        <div className="text-right shrink-0">
+          <p className="font-black text-gray-900 dark:text-white text-sm">{entry.calories}</p>
+          <p className="text-xs text-gray-400">kcal</p>
+        </div>
+        <button onClick={onDelete}
+          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+});
 
 const NutritionPage: React.FC = () => {
   const navigate = useNavigate();
@@ -468,24 +510,7 @@ const NutritionPage: React.FC = () => {
                   </div>
                   <div className="divide-y divide-gray-50 dark:divide-slate-800">
                     {items.map(entry => (
-                      <div key={entry.id} className="flex items-center gap-3 px-5 py-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{entry.name}</p>
-                          <div className="flex gap-3 mt-0.5">
-                            <span className="text-xs text-indigo-500 font-medium">{entry.protein}g P</span>
-                            <span className="text-xs text-amber-500 font-medium">{entry.carbs}g C</span>
-                            <span className="text-xs text-pink-500 font-medium">{entry.fat}g F</span>
-                          </div>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className="font-black text-gray-900 dark:text-white text-sm">{entry.calories}</p>
-                          <p className="text-xs text-gray-400">kcal</p>
-                        </div>
-                        <button onClick={() => handleDelete(entry.id)}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all">
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>
-                      </div>
+                      <FoodEntryRow key={entry.id} entry={entry} onDelete={() => handleDelete(entry.id)} />
                     ))}
                   </div>
                 </div>

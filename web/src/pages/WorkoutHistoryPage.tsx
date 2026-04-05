@@ -7,6 +7,8 @@ import { ListSkeleton } from '../components/LoadingSkeleton';
 import { generateWorkoutPDF } from '../utils/pdfGenerator';
 import { useDebounce } from '../hooks/useDebounce';
 import { useTranslation } from 'react-i18next';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
+import PullToRefresh from '../components/PullToRefresh';
 
 interface WorkoutSession {
   id: string;
@@ -59,6 +61,8 @@ const WorkoutHistoryPage: React.FC = () => {
       setWorkouts(data.data || []);
     } catch { /* ignore */ } finally { setLoading(false); }
   };
+
+  const { pullY, refreshing } = usePullToRefresh({ onRefresh: fetchWorkouts });
 
   const fmt = (d: string) => new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   const fmtTime = (d: string) => new Date(d).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -123,6 +127,7 @@ const WorkoutHistoryPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
       <Navbar />
+      <PullToRefresh pullY={pullY} refreshing={refreshing} />
 
       {/* Hero */}
       <div className="relative bg-slate-950 overflow-hidden py-12">

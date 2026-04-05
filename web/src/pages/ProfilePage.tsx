@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
@@ -6,6 +6,17 @@ import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
 import { CardSkeleton } from '../components/LoadingSkeleton';
 import { useTranslation } from 'react-i18next';
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+} from 'recharts';
+
+interface Measurement {
+  id: string;
+  date: string;
+  weight?: number;
+  bodyFat?: number;
+  waist?: number;
+}
 
 interface UserProfile {
   age?: number;
@@ -127,6 +138,22 @@ const ProfilePage: React.FC = () => {
   const bmiCategory = getBMICategory(bmi);
   const initials = (user.fullName || user.username || 'U').slice(0, 2).toUpperCase();
   const goalMeta = onboarding.goal ? GOAL_META[onboarding.goal] : null;
+
+  // Weight trend from body measurements
+  const weightChartData = useMemo(() => {
+    try {
+      const raw: Measurement[] = JSON.parse(localStorage.getItem('bodyMeasurements') || '[]');
+      return raw
+        .filter(m => m.weight)
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(-12)
+        .map(m => ({
+          date: new Date(m.date).toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+          weight: m.weight,
+          bodyFat: m.bodyFat,
+        }));
+    } catch { return []; }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
@@ -309,6 +336,98 @@ const ProfilePage: React.FC = () => {
                 )}
               </div>
             )}
+            {/* Weight Trend Chart */}
+            {weightChartData.length >= 2 && (
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-800">
+                  <h2 className="font-bold text-gray-900 dark:text-white">Weight Trend</h2>
+                  <a href="/measurements" className="text-xs font-semibold text-blue-500 hover:text-blue-600 transition-colors">View all →</a>
+                </div>
+                <div className="p-4">
+                  {/* Stats row */}
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    {(() => {
+                      const first = weightChartData[0].weight!;
+                      const last  = weightChartData[weightChartData.length - 1].weight!;
+                      const diff  = last - first;
+                      const min   = Math.min(...weightChartData.map(d => d.weight!));
+                      const max   = Math.max(...weightChartData.map(d => d.weight!));
+                      return (
+                        <>
+                          <div className="text-center p-3 bg-indigo-50 dark:bg-indigo-950/30 rounded-xl">
+                            <div className="text-lg font-black text-indigo-600 dark:text-indigo-400">{last} kg</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">Current</div>
+                          </div>
+                          <div className={`text-center p-3 rounded-xl ${diff < 0 ? 'bg-emerald-50 dark:bg-emerald-950/30' : diff > 0 ? 'bg-orange-50 dark:bg-orange-950/30' : 'bg-gray-50 dark:bg-slate-800/60'}`}>
+                            <div className={`text-lg font-black ${diff < 0 ? 'text-emerald-600 dark:text-emerald-400' : diff > 0 ? 'text-orange-500' : 'text-gray-500'}`}>
+                              {diff > 0 ? '+' : ''}{diff.toFixed(1)} kg
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">Change</div>
+                          </div>
+                          <div className="text-center p-3 bg-violet-50 dark:bg-violet-950/30 rounded-xl">
+                            <div className="text-lg font-black text-violet-600 dark:text-violet-400">{(max - min).toFixed(1)} kg</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">Range</div>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                  <ResponsiveContainer width="100%" height={160}>
+                    <AreaChart data={weightChartData} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="weightGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%"  stopColor="#6366f1" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0.02} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(99,102,241,0.08)" />
+                      <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--chart-label, #94a3b8)' }} tickLine={false} axisLine={false} />
+                      <YAxis tick={{ fontSize: 10, fill: 'var(--chart-label, #94a3b8)' }} tickLine={false} axisLine={false}
+                        domain={([min, max]: number[]) => [Math.floor(min - 1), Math.ceil(max + 1)]} />
+                      <Tooltip
+                        contentStyle={{ background: 'var(--tooltip-bg, #1e293b)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 10, fontSize: 12 }}
+                        labelStyle={{ color: '#94a3b8', fontWeight: 600 }}
+                        itemStyle={{ color: '#a5b4fc' }}
+                        formatter={(v: number) => [`${v} kg`, 'Weight']} />
+                      <Area type="monotone" dataKey="weight" stroke="#6366f1" strokeWidth={2.5}
+                        fill="url(#weightGrad)" dot={{ r: 3, fill: '#6366f1', strokeWidth: 0 }}
+                        activeDot={{ r: 5, fill: '#6366f1' }}
+                        isAnimationActive animationDuration={900} animationEasing="ease-out" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+
+                  {/* Body fat mini chart if available */}
+                  {weightChartData.some(d => d.bodyFat) && (
+                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-slate-800">
+                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Body Fat %</p>
+                      <ResponsiveContainer width="100%" height={110}>
+                        <AreaChart data={weightChartData} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="fatGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%"  stopColor="#f59e0b" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.02} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(245,158,11,0.08)" />
+                          <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--chart-label, #94a3b8)' }} tickLine={false} axisLine={false} />
+                          <YAxis tick={{ fontSize: 10, fill: 'var(--chart-label, #94a3b8)' }} tickLine={false} axisLine={false} />
+                          <Tooltip
+                            contentStyle={{ background: 'var(--tooltip-bg, #1e293b)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, fontSize: 12 }}
+                            labelStyle={{ color: '#94a3b8', fontWeight: 600 }}
+                            itemStyle={{ color: '#fcd34d' }}
+                            formatter={(v: number) => [`${v}%`, 'Body Fat']} />
+                          <Area type="monotone" dataKey="bodyFat" stroke="#f59e0b" strokeWidth={2}
+                            fill="url(#fatGrad)" dot={{ r: 3, fill: '#f59e0b', strokeWidth: 0 }}
+                            activeDot={{ r: 5, fill: '#f59e0b' }}
+                            isAnimationActive animationDuration={900} animationEasing="ease-out" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Training Goals — from onboarding */}
             {(onboarding.goal || onboarding.level || onboarding.daysPerWeek || onboarding.calorieGoal) && (
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
