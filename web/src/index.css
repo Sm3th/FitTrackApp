@@ -285,6 +285,90 @@ body.no-pull-refresh { overscroll-behavior-y: contain; }
   animation: confetti-fall linear forwards;
 }
 
+/* ─── Premium card hover with shimmer ───────────────── */
+.card-hover {
+  position: relative;
+  overflow: hidden;
+}
+.card-hover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.06) 50%, transparent 60%);
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 1;
+}
+.card-hover:hover::before {
+  opacity: 1;
+  animation: shimmer-hover 0.6s ease-out forwards;
+}
+@keyframes shimmer-hover {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* ─── Stat card pop animation ────────────────────────── */
+@keyframes stat-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+.animate-stat-pop { animation: stat-pop 0.35s ease-out; }
+
+/* ─── Pulse ring (for active workout indicator) ──────── */
+@keyframes ping-ring {
+  0%   { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+.animate-ping-ring {
+  animation: ping-ring 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* ─── Gradient border ────────────────────────────────── */
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--p-from), var(--p-to));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ─── Mobile: better touch interaction ──────────────── */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* ─── Skeleton loading ───────────────────────────────── */
+@keyframes skeleton-wave {
+  0%   { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg,
+    rgba(148,163,184,0.08) 25%,
+    rgba(148,163,184,0.18) 37%,
+    rgba(148,163,184,0.08) 63%
+  );
+  background-size: 400px 100%;
+  animation: skeleton-wave 1.4s ease infinite;
+  border-radius: 0.5rem;
+}
+
+/* ─── Smooth number transitions ─────────────────────── */
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
 /* ─── Dark mode overrides ───────────────────────────── */
 .dark .card { @apply border-slate-800; }
 

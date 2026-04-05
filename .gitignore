@@ -49,3 +49,7 @@ desktop.ini
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+
+# Playwright
+web/playwright-report/
+web/test-results/

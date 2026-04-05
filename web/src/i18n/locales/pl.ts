@@ -714,6 +714,38 @@ const pl = {
     noData: 'Nic tu jeszcze nie ma',
   },
 
+  aiCoach: {
+    badge: 'Trener AI',
+    title: 'Twój osobisty trener',
+    subtitle: 'Spersonalizowane rekomendacje na podstawie Twojej historii treningów',
+    fitnessScore: 'Wynik Fitness',
+    beginner: 'Początkujący',
+    elite: 'Elita',
+    coachInsights: 'Spostrzeżenia trenera',
+    recommendations: 'Rekomendacje',
+    perfectBalance: 'Doskonała równowaga treningowa!',
+    noIssues: 'Nie wykryto problemów. Tak trzymaj.',
+    weeklyPlan: '7-dniowy plan treningowy',
+    startLogging: 'Zacznij rejestrować treningi',
+    noWorkoutsDesc: 'Zarejestruj kilka treningów, a trener AI przeanalizuje Twoje wzorce i da spersonalizowane porady.',
+    goWorkout: 'Zacznij pierwszy trening',
+  },
+
+  sharedWorkout: {
+    sharedBy: 'Udostępnione przez',
+    duration: 'Czas trwania',
+    exercises: 'Ćwiczenia',
+    volume: 'Objętość',
+    copyLink: '🔗 Kopiuj link',
+    copied: '✓ Skopiowano!',
+    tryWorkout: 'Wypróbuj ten trening',
+    ctaTitle: 'Śledź treningi z FitTrack Pro',
+    ctaDesc: 'Kompleksowy asystent fitness',
+    getStarted: 'Zacznij za darmo',
+    invalidLink: 'Nieprawidłowy link udostępniania',
+    goHome: 'Idź do strony głównej',
+  },
+
   notFound: {
     title: 'Strona nie znaleziona',
     subtitle: 'Strona, której szukasz, nie istnieje.',

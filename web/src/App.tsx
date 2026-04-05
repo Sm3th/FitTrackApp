@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import BottomNav from './components/BottomNav';
 import WorkoutFAB from './components/WorkoutFAB';
@@ -7,6 +7,7 @@ import OfflineBanner from './components/OfflineBanner';
 import OnboardingGate from './components/OnboardingGate';
 import PageTransition from './components/PageTransition';
 import { useScrollToTop } from './hooks/useScrollToTop';
+import { checkAndFireReminder } from './pages/WorkoutRemindersPage';
 
 // Loading fallback
 const PageLoader = () => (
@@ -42,10 +43,20 @@ const ExerciseLibraryPage    = lazy(() => import('./pages/ExerciseLibraryPage'))
 const WorkoutTipsPage        = lazy(() => import('./pages/WorkoutTipsPage'));
 const WorkoutRemindersPage   = lazy(() => import('./pages/WorkoutRemindersPage'));
 const NutritionPage          = lazy(() => import('./pages/NutritionPage'));
+const AICoachPage            = lazy(() => import('./pages/AICoachPage'));
+const SharedWorkoutPage      = lazy(() => import('./pages/SharedWorkoutPage'));
 const NotFoundPage           = lazy(() => import('./pages/NotFoundPage'));
 
 function AppInner() {
   useScrollToTop();
+
+  // Poll every 60 s to fire workout reminders if due
+  useEffect(() => {
+    checkAndFireReminder();
+    const id = setInterval(checkAndFireReminder, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
   return null;
 }
 
@@ -81,6 +92,8 @@ function App() {
             <Route path="/tips"               element={<WorkoutTipsPage />} />
             <Route path="/reminders"          element={<WorkoutRemindersPage />} />
             <Route path="/nutrition"          element={<NutritionPage />} />
+            <Route path="/ai-coach"           element={<AICoachPage />} />
+            <Route path="/shared-workout"     element={<SharedWorkoutPage />} />
             <Route path="*"                   element={<NotFoundPage />} />
           </Routes>
           </PageTransition>

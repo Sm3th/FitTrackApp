@@ -742,6 +742,40 @@ const en = {
     noData: 'Nothing here yet',
   },
 
+  // ── AI Coach ────────────────────────────────────────────
+  aiCoach: {
+    badge: 'AI Coach',
+    title: 'Your Personal Coach',
+    subtitle: 'Personalised recommendations based on your training history',
+    fitnessScore: 'Fitness Score',
+    beginner: 'Beginner',
+    elite: 'Elite',
+    coachInsights: 'Coach Insights',
+    recommendations: 'Recommendations',
+    perfectBalance: 'Perfect Training Balance!',
+    noIssues: "No issues detected. Keep doing what you're doing.",
+    weeklyPlan: '7-Day Training Plan',
+    startLogging: 'Start Logging Workouts',
+    noWorkoutsDesc: 'Log a few workouts and your AI coach will analyse your training patterns and give personalised advice.',
+    goWorkout: 'Start Your First Workout',
+  },
+
+  // ── Shared Workout ───────────────────────────────────────
+  sharedWorkout: {
+    sharedBy: 'Shared by',
+    duration: 'Duration',
+    exercises: 'Exercises',
+    volume: 'Volume',
+    copyLink: '🔗 Copy Link',
+    copied: '✓ Copied!',
+    tryWorkout: 'Try This Workout',
+    ctaTitle: 'Track your workouts with FitTrack Pro',
+    ctaDesc: 'The all-in-one fitness companion',
+    getStarted: 'Get Started Free',
+    invalidLink: 'Invalid share link',
+    goHome: 'Go Home',
+  },
+
   // ── 404 ─────────────────────────────────────────────────
   notFound: {
     title: 'Page Not Found',

@@ -136,7 +136,6 @@ export class DatabaseService {
       where: {
         muscleGroup: {
           equals: muscleGroup,
-          mode: 'insensitive',
         },
       },
       orderBy: {
@@ -452,6 +451,55 @@ export class DatabaseService {
     return await this.prisma.goal.delete({
       where: { id },
     });
+  }
+
+  // ============================================
+  // LEADERBOARD
+  // ============================================
+
+  async getLeaderboard(days = 30) {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    // Get all workout sessions in the period, group by user
+    const sessions = await this.prisma.workoutSession.findMany({
+      where: { startTime: { gte: since } },
+      select: {
+        userId: true,
+        duration: true,
+        exerciseSets: { select: { reps: true, weight: true } },
+        user: { select: { id: true, username: true, fullName: true } },
+      },
+    });
+
+    const map: Record<string, {
+      userId: string; username: string; fullName: string | null;
+      workouts: number; totalVolume: number; totalDuration: number;
+    }> = {};
+
+    sessions.forEach(s => {
+      const uid = s.userId;
+      if (!map[uid]) {
+        map[uid] = {
+          userId: uid,
+          username: s.user.username,
+          fullName: s.user.fullName,
+          workouts: 0,
+          totalVolume: 0,
+          totalDuration: 0,
+        };
+      }
+      map[uid].workouts++;
+      map[uid].totalDuration += s.duration || 0;
+      map[uid].totalVolume += s.exerciseSets.reduce(
+        (sum, set) => sum + (set.reps || 0) * (set.weight || 0), 0
+      );
+    });
+
+    return Object.values(map)
+      .sort((a, b) => b.workouts - a.workouts || b.totalVolume - a.totalVolume)
+      .slice(0, 20)
+      .map((entry, i) => ({ rank: i + 1, ...entry }));
   }
 
   // ============================================

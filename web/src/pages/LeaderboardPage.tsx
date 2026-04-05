@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
 import EmptyState from '../components/EmptyState';
-import { calculateStreak, getTotalVolume } from '../utils/statsHelper';
 import { useTranslation } from 'react-i18next';
 
 interface LeaderboardUser {
-  id: string;
+  userId: string;
   username: string;
-  totalWorkouts: number;
+  fullName: string | null;
+  workouts: number;
   totalVolume: number;
-  currentStreak: number;
+  totalDuration: number;
   rank: number;
   isCurrentUser?: boolean;
 }
 
-type LeaderboardType = 'workouts' | 'volume' | 'streak';
+type LeaderboardType = 'workouts' | 'volume' | 'duration';
 
 const LeaderboardPage: React.FC = () => {
   const { t } = useTranslation();
@@ -24,103 +24,29 @@ const LeaderboardPage: React.FC = () => {
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const [activeTab, setActiveTab] = useState<LeaderboardType>('workouts');
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-    fetchLeaderboard();
-  }, [navigate]);
-
-  const fetchLeaderboard = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      // Fetch current user's workouts
-      const response = await axios.get(
-        'http://localhost:3000/api/workouts/sessions',
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-
-      const workouts = response.data.data || [];
-      
-      // Calculate current user stats
-      const currentUserStats = {
-        id: currentUser.id || '1',
-        username: currentUser.username || 'You',
-        totalWorkouts: workouts.length,
-        totalVolume: getTotalVolume(workouts),
-        currentStreak: calculateStreak(workouts),
-        rank: 0,
-        isCurrentUser: true,
-      };
-
-      // Generate mock users (demo data)
-      const mockUsers: LeaderboardUser[] = generateMockUsers(currentUserStats);
-
-      setLeaderboard(mockUsers);
-    } catch (error) {
-      console.error('Fetch leaderboard error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const generateMockUsers = (currentUser: LeaderboardUser): LeaderboardUser[] => {
-    const usernames = [
-      'FitWarrior', 'GymBeast', 'IronPro', 'FlexMaster', 'PowerHouse',
-      'MuscleKing', 'FitQueen', 'SwoleMate', 'GainsTrain', 'BeastMode',
-      'FitFreak', 'LiftLegend', 'GymRat', 'PumpChaser', 'MuscleMaven'
-    ];
-
-    const users: LeaderboardUser[] = usernames.map((username, index) => {
-      // Generate realistic stats around current user
-      const workoutVariation = Math.floor(Math.random() * 40) - 20;
-      const volumeVariation = Math.floor(Math.random() * 20000) - 10000;
-      const streakVariation = Math.floor(Math.random() * 10) - 5;
-
-      return {
-        id: `mock-${index}`,
-        username,
-        totalWorkouts: Math.max(1, currentUser.totalWorkouts + workoutVariation),
-        totalVolume: Math.max(100, currentUser.totalVolume + volumeVariation),
-        currentStreak: Math.max(0, currentUser.currentStreak + streakVariation),
-        rank: 0,
-      };
-    });
-
-    // Add current user
-    users.push(currentUser);
-
-    return users;
-  };
+    if (!localStorage.getItem('token')) { navigate('/login'); return; }
+    apiClient.get('/users/leaderboard')
+      .then(res => {
+        const data: LeaderboardUser[] = (res.data.data || []).map((u: LeaderboardUser) => ({
+          ...u,
+          isCurrentUser: u.username === currentUser.username,
+        }));
+        setLeaderboard(data);
+      })
+      .catch(err => console.error('Leaderboard error:', err))
+      .finally(() => setLoading(false));
+  }, [navigate, currentUser.username]);
 
   const getSortedLeaderboard = (): LeaderboardUser[] => {
-    let sorted = [...leaderboard];
-
-    switch (activeTab) {
-      case 'workouts':
-        sorted.sort((a, b) => b.totalWorkouts - a.totalWorkouts);
-        break;
-      case 'volume':
-        sorted.sort((a, b) => b.totalVolume - a.totalVolume);
-        break;
-      case 'streak':
-        sorted.sort((a, b) => b.currentStreak - a.currentStreak);
-        break;
-    }
-
-    // Assign ranks
-    return sorted.map((user, index) => ({
-      ...user,
-      rank: index + 1,
-    }));
+    const sorted = [...leaderboard].sort((a, b) => {
+      if (activeTab === 'volume')   return b.totalVolume   - a.totalVolume;
+      if (activeTab === 'duration') return b.totalDuration - a.totalDuration;
+      return b.workouts - a.workouts;
+    });
+    return sorted.map((u, i) => ({ ...u, rank: i + 1 }));
   };
 
   const sortedLeaderboard = getSortedLeaderboard();
@@ -134,17 +60,12 @@ const LeaderboardPage: React.FC = () => {
   };
 
   const getStatValue = (user: LeaderboardUser): string => {
-    switch (activeTab) {
-      case 'workouts':
-        return t('leaderboard.workoutsStat', { n: user.totalWorkouts });
-      case 'volume':
-        return `${user.totalVolume.toLocaleString()} kg`;
-      case 'streak':
-        return t('leaderboard.daysStat', { n: user.currentStreak });
-    }
+    if (activeTab === 'volume')   return `${Math.round(user.totalVolume).toLocaleString()} kg`;
+    if (activeTab === 'duration') return `${user.totalDuration} min`;
+    return t('leaderboard.workoutsStat', { n: user.workouts });
   };
 
-  const currentUserWorkouts = currentUserEntry?.totalWorkouts ?? 0;
+  const currentUserWorkouts = currentUserEntry?.workouts ?? 0;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
@@ -179,9 +100,9 @@ const LeaderboardPage: React.FC = () => {
           {/* Tabs */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-1.5 flex gap-1.5">
             {([
-              { key: 'workouts', icon: '💪', grad: 'from-blue-500 to-indigo-500' },
-              { key: 'volume',   icon: '🏋️', grad: 'from-violet-500 to-purple-500' },
-              { key: 'streak',   icon: '🔥', grad: 'from-orange-500 to-red-500' },
+              { key: 'workouts',  icon: '💪', grad: 'from-blue-500 to-indigo-500' },
+              { key: 'volume',    icon: '🏋️', grad: 'from-violet-500 to-purple-500' },
+              { key: 'duration',  icon: '⏱️', grad: 'from-orange-500 to-red-500' },
             ] as const).map(tab => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all ${
@@ -239,7 +160,7 @@ const LeaderboardPage: React.FC = () => {
                   const textColors = ['text-slate-600', 'text-amber-600', 'text-orange-600'];
                   const emojis = ['🥈', '🥇', '🥉'];
                   return (
-                    <div key={user.id} className="flex flex-col items-center gap-2 flex-1">
+                    <div key={user.userId} className="flex flex-col items-center gap-2 flex-1">
                       <div className="text-2xl">{emojis[pos]}</div>
                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-lg ${
                         user.isCurrentUser ? 'ring-2 ring-blue-400 ring-offset-2 dark:ring-offset-slate-900' : ''
@@ -272,7 +193,7 @@ const LeaderboardPage: React.FC = () => {
             ) : (
               <div className="divide-y divide-gray-50 dark:divide-slate-800/60">
                 {sortedLeaderboard.map(user => (
-                  <div key={user.id}
+                  <div key={user.userId}
                     className={`flex items-center gap-4 px-5 py-3.5 transition-colors ${
                       user.isCurrentUser
                         ? 'bg-blue-50/60 dark:bg-blue-900/10'

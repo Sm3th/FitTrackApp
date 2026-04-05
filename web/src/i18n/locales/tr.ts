@@ -714,6 +714,38 @@ const tr = {
     noData: 'Henüz bir şey yok',
   },
 
+  aiCoach: {
+    badge: 'AI Koç',
+    title: 'Kişisel Koçun',
+    subtitle: 'Antrenman geçmişine göre kişiselleştirilmiş öneriler',
+    fitnessScore: 'Fitness Puanı',
+    beginner: 'Başlangıç',
+    elite: 'Elit',
+    coachInsights: 'Koç Öngörüleri',
+    recommendations: 'Öneriler',
+    perfectBalance: 'Mükemmel Antrenman Dengesi!',
+    noIssues: 'Herhangi bir sorun tespit edilmedi. Böyle devam et.',
+    weeklyPlan: '7 Günlük Antrenman Planı',
+    startLogging: 'Antrenman Kaydetmeye Başla',
+    noWorkoutsDesc: 'Birkaç antrenman kaydet ve AI koçun antrenman örüntülerini analiz edip kişisel tavsiyeler verecek.',
+    goWorkout: 'İlk Antrenmanını Başlat',
+  },
+
+  sharedWorkout: {
+    sharedBy: 'Paylaşan',
+    duration: 'Süre',
+    exercises: 'Egzersizler',
+    volume: 'Hacim',
+    copyLink: '🔗 Linki Kopyala',
+    copied: '✓ Kopyalandı!',
+    tryWorkout: 'Bu Antrenmanı Dene',
+    ctaTitle: "FitTrack Pro ile antrenmanlarını takip et",
+    ctaDesc: 'Hepsi bir arada fitness asistanı',
+    getStarted: 'Ücretsiz Başla',
+    invalidLink: 'Geçersiz paylaşım linki',
+    goHome: 'Ana Sayfaya Git',
+  },
+
   notFound: {
     title: 'Sayfa Bulunamadı',
     subtitle: 'Aradığınız sayfa mevcut değil.',

@@ -89,6 +89,7 @@ const Navbar: React.FC = () => {
     { path: '/measurements', label: `📏 ${t('nav.measurements')}` },
     { path: '/water', label: `💧 ${t('nav.water')}` },
     { path: '/templates', label: `📋 ${t('nav.templates')}` },
+    { path: '/ai-coach', label: `🧠 AI Coach` },
     { path: '/calculators', label: `💯 ${t('nav.calculators')}` },
     { path: '/challenges', label: `🎯 ${t('nav.challenges')}` },
     { path: '/exercise-library', label: `📚 ${t('nav.exerciseLibrary')}` },

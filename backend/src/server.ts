@@ -1,9 +1,14 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
 import authRoutes from './routes/auth.routes';
 import exerciseRoutes from './routes/exercise.routes';
 import workoutRoutes from './routes/workout.routes';
+import nutritionRoutes from './routes/nutrition.routes';
+import metricsRoutes from './routes/metrics.routes';
+import usersRoutes from './routes/users.routes';
+import { swaggerSpec } from './swagger';
 
 dotenv.config();
 
@@ -13,6 +18,27 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Swagger UI — API Documentation
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: 'FitTrack Pro API Docs',
+  customCss: `
+    .swagger-ui .topbar { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+    .swagger-ui .topbar .download-url-wrapper { display: none; }
+    .swagger-ui .info .title { color: #f97316; }
+  `,
+  swaggerOptions: {
+    persistAuthorization: true,
+    displayRequestDuration: true,
+    docExpansion: 'list',
+  },
+}));
+
+// Swagger JSON spec endpoint (for external tools like Postman)
+app.get('/api/docs.json', (_req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
@@ -27,6 +53,9 @@ app.get('/health', (req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/workouts', workoutRoutes);
+app.use('/api/nutrition', nutritionRoutes);
+app.use('/api/metrics', metricsRoutes);
+app.use('/api/users', usersRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
@@ -54,6 +83,7 @@ app.listen(PORT, () => {
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`💪 API base URL: http://localhost:${PORT}/api`);
+  console.log(`📚 API Docs:     http://localhost:${PORT}/api/docs`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 });
 

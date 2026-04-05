@@ -2,6 +2,17 @@ import { defineConfig, splitVendorChunkPlugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    typecheck: { tsconfig: './tsconfig.test.json' },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+      include: ['src/utils/**', 'src/hooks/**'],
+    },
+  },
   plugins: [
     react(),
     splitVendorChunkPlugin(),

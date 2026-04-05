@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  LineChart, Line, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import Navbar from '../components/Navbar';
 import {
@@ -24,6 +24,7 @@ import { calculateAchievements } from '../utils/achievements';
 import { generateWorkoutPDF } from '../utils/pdfGenerator';
 import { exportWorkoutsToCsv, exportPersonalRecordsToCsv } from '../utils/csvExporter';
 import EmptyState from '../components/EmptyState';
+import MuscleHeatmap from '../components/MuscleHeatmap';
 import { useTranslation } from 'react-i18next';
 
 interface WorkoutSession {
@@ -323,18 +324,7 @@ const StatsPage: React.FC = () => {
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('stats.muscleGroups')}</h2>
                   {muscleBreakdown.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={280}>
-                      <PieChart>
-                        <Pie data={muscleBreakdown} cx="50%" cy="50%" innerRadius={60} outerRadius={110} paddingAngle={3} dataKey="value">
-                          {muscleBreakdown.map((entry, index) => (
-                            <Cell key={index} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value, name) => [`${value} sets`, name]}
-                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.15)', background: '#1e293b', color: '#f1f5f9' }} />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
+                    <MuscleHeatmap muscleBreakdown={muscleBreakdown} />
                   ) : (
                     <div className="h-64 flex flex-col items-center justify-center text-gray-400 dark:text-gray-600 gap-2">
                       <span className="text-4xl">💪</span>

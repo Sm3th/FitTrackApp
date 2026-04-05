@@ -34,17 +34,6 @@ const StarDisplay: React.FC<{ rating: number }> = ({ rating }) => (
   </div>
 );
 
-const formatWorkoutForShare = (workout: WorkoutSession, sets: ExerciseSet[]): string => {
-  const date = new Date(workout.startTime).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-  const mins = workout.duration;
-  const dur = mins ? (mins < 60 ? `${mins}m` : `${Math.floor(mins/60)}h ${mins%60}m`) : '';
-  const grouped: Record<string, ExerciseSet[]> = {};
-  sets.forEach(s => { const n = s.exercise.name; if (!grouped[n]) grouped[n]=[]; grouped[n].push(s); });
-  const lines = Object.entries(grouped).map(([name, exSets]) =>
-    `  ${name}\n` + exSets.map(s => `    Set ${s.setNumber}: ${s.reps ? s.reps + ' reps' : ''}${s.weight ? ' × ' + s.weight + ' kg' : ''}`).join('\n')
-  ).join('\n');
-  return `💪 ${workout.name || 'Workout Session'}\n📅 ${date}${dur ? ' · ⏱ ' + dur : ''} · 🎯 ${sets.length} sets\n\n${lines}\n\nTracked with FitTrack Pro 🏋️`;
-};
 
 const WorkoutHistoryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -99,14 +88,36 @@ const WorkoutHistoryPage: React.FC = () => {
     [workouts, debouncedSearch, sortBy]
   );
 
+  const generateShareLink = useCallback((workout: WorkoutSession) => {
+    const userRaw = localStorage.getItem('user');
+    const user = userRaw ? JSON.parse(userRaw) : { username: 'FitTracker' };
+    const exercises = Object.entries(groupSetsByExercise(workout.exerciseSets || []))
+      .map(([name, sets]) => ({
+        name,
+        sets: sets.length,
+        reps: sets[0]?.reps || 0,
+        weight: sets[0]?.weight || 0,
+      }));
+    const vol = workout.exerciseSets?.reduce((s, e) => s + (e.reps||0)*(e.weight||0), 0) || 0;
+    const data = {
+      name: workout.name || 'Workout',
+      date: workout.startTime,
+      duration: workout.duration || 0,
+      exercises,
+      totalVolume: vol,
+      sharedBy: user.username || 'FitTracker',
+    };
+    return `${window.location.origin}/shared-workout?data=${btoa(JSON.stringify(data))}`;
+  }, [groupSetsByExercise]);
+
   const handleShare = useCallback(async () => {
     if (!selectedWorkout) return;
-    const text = formatWorkoutForShare(selectedWorkout, selectedWorkout.exerciseSets || []);
-    try { await navigator.clipboard.writeText(text); }
-    catch { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
+    const url = generateShareLink(selectedWorkout);
+    try { await navigator.clipboard.writeText(url); }
+    catch { const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
-  }, [selectedWorkout]);
+  }, [selectedWorkout, generateShareLink]);
 
   const totalVolume = selectedWorkout?.exerciseSets?.reduce((s, e) => s + (e.reps||0)*(e.weight||0), 0) || 0;
 

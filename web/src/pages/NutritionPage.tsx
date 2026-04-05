@@ -1,7 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useTranslation } from 'react-i18next';
+
+interface OFFProduct {
+  product_name: string;
+  brands?: string;
+  nutriments: {
+    'energy-kcal_100g'?: number;
+    proteins_100g?: number;
+    carbohydrates_100g?: number;
+    fat_100g?: number;
+  };
+}
 
 interface FoodEntry {
   id: string;
@@ -83,6 +94,54 @@ const NutritionPage: React.FC = () => {
     name: '', calories: '', protein: '', carbs: '', fat: '',
     meal: 'breakfast' as FoodEntry['meal'],
   });
+
+  // ── Open Food Facts search ────────────────────────────────────────────────
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<OFFProduct[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [serving, setServing] = useState('100');
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const searchFood = useCallback(async (query: string) => {
+    if (query.trim().length < 2) { setSearchResults([]); return; }
+    setSearchLoading(true);
+    try {
+      const res = await fetch(
+        `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=6&fields=product_name,brands,nutriments`
+      );
+      const data = await res.json();
+      const products: OFFProduct[] = (data.products || []).filter(
+        (p: OFFProduct) => p.product_name && p.nutriments?.['energy-kcal_100g']
+      );
+      setSearchResults(products.slice(0, 5));
+    } catch {
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => searchFood(value), 500);
+  };
+
+  const applyProduct = (product: OFFProduct) => {
+    const grams = parseFloat(serving) || 100;
+    const ratio = grams / 100;
+    const n = product.nutriments;
+    setForm(f => ({
+      ...f,
+      name: product.product_name + (product.brands ? ` (${product.brands.split(',')[0].trim()})` : ''),
+      calories: Math.round((n['energy-kcal_100g'] || 0) * ratio).toString(),
+      protein:  ((n.proteins_100g || 0) * ratio).toFixed(1),
+      carbs:    ((n.carbohydrates_100g || 0) * ratio).toFixed(1),
+      fat:      ((n.fat_100g || 0) * ratio).toFixed(1),
+    }));
+    setSearchResults([]);
+    setSearchQuery('');
+  };
 
   useEffect(() => {
     if (!localStorage.getItem('token')) { navigate('/login'); return; }
@@ -282,6 +341,67 @@ const NutritionPage: React.FC = () => {
                   {MEAL_ICONS[m]} {MEAL_LABELS[m]}
                 </button>
               ))}
+            </div>
+
+            {/* ── Food Search (Open Food Facts) ── */}
+            <div className="mb-4">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-base">🔍</span>
+                <input
+                  value={searchQuery}
+                  onChange={e => handleSearchChange(e.target.value)}
+                  placeholder="Search food database (e.g. banana, chicken breast)…"
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm"
+                />
+                {searchLoading && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <svg className="w-4 h-4 text-emerald-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                    </svg>
+                  </span>
+                )}
+              </div>
+
+              {/* Serving size */}
+              {searchResults.length > 0 && (
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs text-slate-500">Serving size:</span>
+                  <input
+                    type="number" min="1" value={serving}
+                    onChange={e => setServing(e.target.value)}
+                    className="w-16 px-2 py-1 bg-slate-800 border border-slate-700 rounded-lg text-white text-xs text-center focus:ring-1 focus:ring-emerald-500 outline-none"
+                  />
+                  <span className="text-xs text-slate-500">g</span>
+                </div>
+              )}
+
+              {/* Results dropdown */}
+              {searchResults.length > 0 && (
+                <div className="mt-2 bg-slate-800 border border-slate-700 rounded-xl overflow-hidden divide-y divide-slate-700/50">
+                  {searchResults.map((product, i) => {
+                    const grams = parseFloat(serving) || 100;
+                    const ratio = grams / 100;
+                    const kcal = Math.round((product.nutriments['energy-kcal_100g'] || 0) * ratio);
+                    const prot = ((product.nutriments.proteins_100g || 0) * ratio).toFixed(1);
+                    return (
+                      <button key={i} onClick={() => applyProduct(product)}
+                        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-slate-700 transition-colors text-left">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-white text-sm font-semibold truncate">{product.product_name}</p>
+                          {product.brands && (
+                            <p className="text-slate-500 text-xs truncate">{product.brands.split(',')[0].trim()}</p>
+                          )}
+                        </div>
+                        <div className="ml-3 shrink-0 text-right">
+                          <span className="text-emerald-400 text-xs font-bold">{kcal} kcal</span>
+                          <span className="text-slate-500 text-xs ml-1.5">{prot}g P</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="space-y-3">
