@@ -97,6 +97,9 @@ const Navbar: React.FC = () => {
     { path: '/reminders', label: `🔔 ${t('nav.reminders')}` },
     { path: '/progress-photos', label: `📸 ${t('nav.progressPhotos')}` },
     { path: '/leaderboard', label: `🏆 ${t('nav.leaderboard')}` },
+    { path: '/friends',     label: `👥 Friends` },
+    { path: '/goals',       label: `🎯 Goals` },
+    { path: '/settings',    label: `⚙️ Settings` },
   ];
 
   const colorOptions = [

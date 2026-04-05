@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
@@ -84,7 +85,12 @@ const ProfilePage: React.FC = () => {
   const handleSave = async () => {
     try {
       setLoading(true);
+      // Persist locally always
       localStorage.setItem('userProfile', JSON.stringify(profile));
+      // Sync to backend if logged in
+      try {
+        await apiClient.patch('/users/me/profile', profile);
+      } catch { /* backend optional — local save already done */ }
       showToast(t('profile.profileSaved'), 'success');
       setIsEditing(false);
     } catch {

@@ -71,19 +71,28 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
 
       {/* Progress bar */}
       <div className="h-1 bg-white/5">
-        <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-700 rounded-full"
-          style={{ width: `${progress}%` }} />
+        <div className="h-full transition-all duration-700 rounded-full"
+          style={{ width: `${progress}%`, background: 'linear-gradient(to right, var(--p-from), var(--p-to))' }} />
       </div>
 
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, var(--p-from), var(--p-to))' }}>
             <span className="text-white text-xs font-black">F</span>
           </div>
           <span className="text-sm font-black text-white">FitTrack Pro</span>
         </div>
-        <span className="text-xs font-semibold text-slate-500">{step} of {TOTAL_STEPS}</span>
+        {/* Step dots */}
+        <div className="flex items-center gap-1.5">
+          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+            <div key={i} className={`rounded-full transition-all duration-300 ${
+              i + 1 === step ? 'w-5 h-2' : i + 1 < step ? 'w-2 h-2' : 'w-2 h-2 opacity-25'
+            }`}
+            style={i + 1 <= step ? { background: 'var(--p-500)' } : { background: 'white' }} />
+          ))}
+        </div>
       </div>
 
       {/* Content */}

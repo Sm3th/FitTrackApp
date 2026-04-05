@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
+import { PageSkeleton } from '../components/LoadingSkeleton';
 import EmptyState from '../components/EmptyState';
 import { calculateAchievements, getRecentlyUnlocked, getNextAchievement, Achievement } from '../utils/achievements';
 import { calculateStreak, getTotalVolume } from '../utils/statsHelper';
@@ -60,11 +61,9 @@ const AchievementsPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
         <Navbar />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400 font-medium">{t('common.loading')}</p>
-          </div>
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="h-8 bg-gray-200 dark:bg-slate-800 rounded w-48 mb-6 animate-pulse" />
+          <PageSkeleton cards={9} />
         </div>
       </div>
     );

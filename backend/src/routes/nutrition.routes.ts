@@ -1,6 +1,8 @@
 import { Router, Response } from 'express';
 import { AuthRequest } from '../types';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { validate } from '../middleware/validate.middleware';
+import { addNutritionSchema } from '../schemas';
 import { db } from '../services/prisma.service';
 
 const router = Router();
@@ -21,7 +23,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 });
 
 // POST /api/nutrition
-router.post('/', async (req: AuthRequest, res: Response) => {
+router.post('/', validate(addNutritionSchema), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
     const { name, calories, protein, carbs, fat, meal, date } = req.body;

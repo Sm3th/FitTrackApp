@@ -127,11 +127,16 @@ const HomePage: React.FC = () => {
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '64px 64px' }} />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-28 text-center">
-          {isLoggedIn && (
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32 text-center">
+          {/* Greeting badge */}
+          {isLoggedIn ? (
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white/80 text-sm font-medium px-4 py-2 rounded-full mb-8 animate-fade-up">
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
               {t('home.welcomeBack')} {user.username || 'Champion'} 👋
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2 bg-white/8 border border-white/15 text-white/60 text-xs font-semibold px-4 py-2 rounded-full mb-8 animate-fade-up tracking-widest uppercase">
+              🏋️ Your fitness journey starts here
             </div>
           )}
 
@@ -146,12 +151,19 @@ const HomePage: React.FC = () => {
             {t('home.heroSubtitle')}
           </p>
 
+          {/* Feature pills */}
+          <div className="flex flex-wrap justify-center gap-2 mb-10 animate-fade-up delay-250">
+            {['🤖 AI Coach', '📊 Analytics', '🏆 Achievements', '💧 Nutrition', '📅 Calendar', '🌍 3 Languages'].map(f => (
+              <span key={f} className="text-xs font-medium bg-white/8 border border-white/12 text-white/60 px-3 py-1.5 rounded-full">{f}</span>
+            ))}
+          </div>
+
           {!isLoggedIn ? (
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up delay-300">
               <button onClick={() => navigate('/register')}
-                className="text-white font-bold text-lg px-10 py-4 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
+                className="text-white font-bold text-lg px-10 py-4 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 active:scale-95 group"
                 style={{ background: 'linear-gradient(to right, var(--p-from), var(--p-to))', boxShadow: '0 16px 40px var(--p-shadow)' }}>
-                {t('home.getStarted')}
+                {t('home.getStarted')} <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
               </button>
               <button onClick={() => navigate('/login')}
                 className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-lg px-10 py-4 rounded-2xl backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-95">
@@ -161,14 +173,28 @@ const HomePage: React.FC = () => {
           ) : (
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up delay-300">
               <button onClick={() => navigate('/workout')}
-                className="text-white font-bold text-lg px-10 py-4 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
+                className="text-white font-bold text-lg px-10 py-4 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 active:scale-95 group"
                 style={{ background: 'linear-gradient(to right, var(--p-from), var(--p-to))', boxShadow: '0 16px 40px var(--p-shadow)' }}>
-                {t('home.startWorkout')}
+                {t('home.startWorkout')} <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
               </button>
               <button onClick={() => navigate('/workout-plans')}
                 className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-lg px-10 py-4 rounded-2xl backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-95">
                 {t('home.browsePlans')}
               </button>
+            </div>
+          )}
+
+          {/* Social proof */}
+          {!isLoggedIn && (
+            <div className="mt-10 flex items-center justify-center gap-3 animate-fade-up delay-400">
+              <div className="flex -space-x-2">
+                {['🧑‍💻','👩‍🏫','🧑‍🔬','👨‍🎓','👩‍💼'].map((e, i) => (
+                  <div key={i} className="w-8 h-8 rounded-full border-2 border-slate-950 bg-slate-800 flex items-center justify-center text-sm">{e}</div>
+                ))}
+              </div>
+              <p className="text-white/40 text-sm">
+                Trusted by <span className="text-white/70 font-semibold">1,200+</span> athletes worldwide
+              </p>
             </div>
           )}
         </div>

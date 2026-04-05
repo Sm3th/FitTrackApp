@@ -1,7 +1,134 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
 import { useTranslation } from 'react-i18next';
+
+// ── Barcode Scanner Component ─────────────────────────────────────────────────
+declare class BarcodeDetector {
+  constructor(options: { formats: string[] });
+  detect(source: HTMLVideoElement): Promise<{ rawValue: string }[]>;
+  static getSupportedFormats(): Promise<string[]>;
+}
+
+const BarcodeScannerModal: React.FC<{
+  onDetect: (barcode: string) => void;
+  onClose: () => void;
+}> = ({ onDetect, onClose }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [manual, setManual] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const supported = typeof window !== 'undefined' && 'BarcodeDetector' in window;
+
+  useEffect(() => {
+    if (!supported) return;
+    let animFrame: number;
+    let stopped = false;
+
+    const start = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+        }
+        const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code'] });
+        setScanning(true);
+        const scan = async () => {
+          if (stopped) return;
+          if (videoRef.current && videoRef.current.readyState === 4) {
+            try {
+              const barcodes = await detector.detect(videoRef.current);
+              if (barcodes.length > 0) {
+                stopped = true;
+                onDetect(barcodes[0].rawValue);
+                return;
+              }
+            } catch { /* ignore */ }
+          }
+          animFrame = requestAnimationFrame(scan);
+        };
+        scan();
+      } catch (e: any) {
+        setError(e.message || 'Camera access denied');
+      }
+    };
+    start();
+
+    return () => {
+      stopped = true;
+      cancelAnimationFrame(animFrame);
+      streamRef.current?.getTracks().forEach(t => t.stop());
+    };
+  }, [supported, onDetect]);
+
+  const handleManual = () => {
+    const cleaned = manual.trim();
+    if (cleaned.length >= 8) onDetect(cleaned);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-sm bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl mx-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-black text-white flex items-center gap-2">
+            <span>🔲</span> Barcode Scanner
+          </h3>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-800 text-slate-400 hover:text-white transition-colors">✕</button>
+        </div>
+
+        {supported && !error && (
+          <div className="relative mb-4 rounded-2xl overflow-hidden bg-black aspect-[4/3]">
+            <video ref={videoRef} className="w-full h-full object-cover" muted playsInline />
+            {scanning && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-48 h-32 border-2 border-emerald-400 rounded-xl opacity-70">
+                  <div className="absolute inset-x-0 top-1/2 h-0.5 bg-emerald-400/60 animate-pulse" />
+                </div>
+              </div>
+            )}
+            <div className="absolute bottom-2 left-0 right-0 text-center">
+              <span className="text-xs text-white/60">Point at a barcode</span>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
+
+        {!supported && (
+          <p className="text-slate-400 text-sm mb-4">Camera barcode detection is not supported in this browser.</p>
+        )}
+
+        <div className="mt-2">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Or enter barcode manually</p>
+          <div className="flex gap-2">
+            <input
+              value={manual}
+              onChange={e => setManual(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleManual()}
+              placeholder="e.g. 5000112637922"
+              className="flex-1 px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm"
+            />
+            <button
+              onClick={handleManual}
+              disabled={manual.trim().length < 8}
+              className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all text-sm active:scale-95">
+              Look up
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface OFFProduct {
   product_name: string;
@@ -95,6 +222,38 @@ const NutritionPage: React.FC = () => {
     meal: 'breakfast' as FoodEntry['meal'],
   });
 
+  // ── Barcode scanner ───────────────────────────────────────────────────────
+  const [showScanner, setShowScanner] = useState(false);
+  const [barcodeLoading, setBarcodeLoading] = useState(false);
+
+  const handleBarcode = useCallback(async (barcode: string) => {
+    setShowScanner(false);
+    setBarcodeLoading(true);
+    try {
+      const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(barcode)}.json`);
+      const data = await res.json();
+      if (data.status !== 1 || !data.product) {
+        alert('Product not found in database. Try searching by name.');
+        return;
+      }
+      const p = data.product as OFFProduct;
+      const n = p.nutriments;
+      setForm(f => ({
+        ...f,
+        name: p.product_name + (p.brands ? ` (${p.brands.split(',')[0].trim()})` : ''),
+        calories: Math.round(n['energy-kcal_100g'] || 0).toString(),
+        protein: (n.proteins_100g || 0).toFixed(1),
+        carbs: (n.carbohydrates_100g || 0).toFixed(1),
+        fat: (n.fat_100g || 0).toFixed(1),
+      }));
+      setShowAdd(true);
+    } catch {
+      alert('Failed to look up barcode. Please try again.');
+    } finally {
+      setBarcodeLoading(false);
+    }
+  }, []);
+
   // ── Open Food Facts search ────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<OFFProduct[]>([]);
@@ -153,7 +312,7 @@ const NutritionPage: React.FC = () => {
     { calories: 0, protein: 0, carbs: 0, fat: 0 }
   );
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.name.trim() || !form.calories) return;
     const entry: FoodEntry = {
       id: Date.now().toString(),
@@ -170,12 +329,16 @@ const NutritionPage: React.FC = () => {
     saveEntries(date, next);
     setForm({ name: '', calories: '', protein: '', carbs: '', fat: '', meal: form.meal });
     setShowAdd(false);
+    // Sync to backend (fire-and-forget)
+    apiClient.post('/nutrition', { ...entry, date }).catch(() => {});
   };
 
   const handleDelete = (id: string) => {
     const next = entries.filter(e => e.id !== id);
     setEntries(next);
     saveEntries(date, next);
+    // Sync to backend (fire-and-forget)
+    apiClient.delete(`/nutrition/${id}`).catch(() => {});
   };
 
   const handleSaveGoals = () => {
@@ -207,11 +370,20 @@ const NutritionPage: React.FC = () => {
             <h1 className="text-4xl font-black text-white tracking-tight mb-1">{t('nutrition.title')}</h1>
             <p className="text-white/40 text-sm">{t('nutrition.subtitle')}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button onClick={() => setShowGoals(true)}
               className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/15 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all active:scale-95">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
               {t('nutrition.goals')}
+            </button>
+            <button onClick={() => setShowScanner(true)}
+              disabled={barcodeLoading}
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/15 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all active:scale-95 disabled:opacity-50">
+              {barcodeLoading
+                ? <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                : <span className="text-base leading-none">🔲</span>
+              }
+              Barcode
             </button>
             <button onClick={() => setShowAdd(true)}
               className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white text-sm font-black px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95">
@@ -323,6 +495,11 @@ const NutritionPage: React.FC = () => {
         )}
       </div>
 
+      {/* Barcode Scanner Modal */}
+      {showScanner && (
+        <BarcodeScannerModal onDetect={handleBarcode} onClose={() => setShowScanner(false)} />
+      )}
+
       {/* Add Food Modal */}
       {showAdd && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -345,22 +522,30 @@ const NutritionPage: React.FC = () => {
 
             {/* ── Food Search (Open Food Facts) ── */}
             <div className="mb-4">
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-base">🔍</span>
-                <input
-                  value={searchQuery}
-                  onChange={e => handleSearchChange(e.target.value)}
-                  placeholder="Search food database (e.g. banana, chicken breast)…"
-                  className="w-full pl-9 pr-4 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm"
-                />
-                {searchLoading && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <svg className="w-4 h-4 text-emerald-400 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                    </svg>
-                  </span>
-                )}
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-base">🔍</span>
+                  <input
+                    value={searchQuery}
+                    onChange={e => handleSearchChange(e.target.value)}
+                    placeholder="Search food database…"
+                    className="w-full pl-9 pr-8 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm"
+                  />
+                  {searchLoading && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <svg className="w-4 h-4 text-emerald-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                      </svg>
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => { setShowAdd(false); setShowScanner(true); }}
+                  title="Scan barcode"
+                  className="w-10 h-10 flex-shrink-0 flex items-center justify-center bg-slate-800 border border-slate-600 rounded-xl text-slate-400 hover:text-emerald-400 hover:border-emerald-500 transition-all text-lg">
+                  🔲
+                </button>
               </div>
 
               {/* Serving size */}

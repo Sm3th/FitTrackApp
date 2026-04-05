@@ -6,6 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import Navbar from '../components/Navbar';
+import { StatsSkeleton } from '../components/LoadingSkeleton';
 import {
   calculateStreak,
   getWeeklyWorkoutData,
@@ -86,12 +87,10 @@ const StatsPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
         <Navbar />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4"
-              style={{ borderColor: 'var(--p-500)', borderTopColor: 'transparent' }} />
-            <p className="text-gray-500 dark:text-gray-400 font-medium">{t('common.loading') || 'Loading…'}</p>
-          </div>
+        <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+          <div className="h-8 bg-gray-200 dark:bg-slate-800 rounded w-40 animate-pulse" />
+          <StatsSkeleton />
+          <StatsSkeleton />
         </div>
       </div>
     );

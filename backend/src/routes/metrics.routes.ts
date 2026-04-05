@@ -1,6 +1,8 @@
 import { Router, Response } from 'express';
 import { AuthRequest } from '../types';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { validate } from '../middleware/validate.middleware';
+import { addMetricSchema } from '../schemas';
 import { db } from '../services/prisma.service';
 
 const router = Router();
@@ -31,7 +33,7 @@ router.get('/latest', async (req: AuthRequest, res: Response) => {
 });
 
 // POST /api/metrics
-router.post('/', async (req: AuthRequest, res: Response) => {
+router.post('/', validate(addMetricSchema), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
     const { weight, bodyFat, chest, waist, hips, arms, legs, date, notes } = req.body;

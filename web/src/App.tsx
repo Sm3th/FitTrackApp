@@ -45,6 +45,9 @@ const WorkoutRemindersPage   = lazy(() => import('./pages/WorkoutRemindersPage')
 const NutritionPage          = lazy(() => import('./pages/NutritionPage'));
 const AICoachPage            = lazy(() => import('./pages/AICoachPage'));
 const SharedWorkoutPage      = lazy(() => import('./pages/SharedWorkoutPage'));
+const SettingsPage           = lazy(() => import('./pages/SettingsPage'));
+const GoalsPage              = lazy(() => import('./pages/GoalsPage'));
+const FriendsPage            = lazy(() => import('./pages/FriendsPage'));
 const NotFoundPage           = lazy(() => import('./pages/NotFoundPage'));
 
 function AppInner() {
@@ -94,6 +97,9 @@ function App() {
             <Route path="/nutrition"          element={<NutritionPage />} />
             <Route path="/ai-coach"           element={<AICoachPage />} />
             <Route path="/shared-workout"     element={<SharedWorkoutPage />} />
+            <Route path="/settings"           element={<SettingsPage />} />
+            <Route path="/goals"             element={<GoalsPage />} />
+            <Route path="/friends"           element={<FriendsPage />} />
             <Route path="*"                   element={<NotFoundPage />} />
           </Routes>
           </PageTransition>

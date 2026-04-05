@@ -1,519 +1,223 @@
-# 🏋️ FitTrack Pro - Complete Project
-## Full-Stack Fitness Tracking Platform
+# FitTrack Pro
 
-**Ready to Run!** Sadece indir, `npm install` ve başlat! 🚀
+A full-stack fitness tracking web application built with React 18, Node.js, and SQLite. Designed as a thesis-quality project demonstrating modern web development practices including CI/CD, Docker, PWA, i18n, and comprehensive testing.
+
+![CI](https://github.com/Sm3th/FitTrackApp/actions/workflows/ci.yml/badge.svg)
+
+## Features
+
+### Workout Tracking
+- Start, log, and end workout sessions with real-time timers
+- Log sets with reps, weight, and notes per exercise
+- Personal record (PR) detection with celebration effects
+- Post-workout rating and notes
+- Workout history with search, sort, and PDF export
+- Share workouts via encoded URL
+
+### Training Plans & Guided Workouts
+- 20 pre-built workout plans (beginner to advanced)
+- Filter by difficulty and category (strength, cardio, HIIT, etc.)
+- Guided workout mode with phase-aware timers (ready → exercise → rest)
+- Exercise demo modal with instructions, tips, and common mistakes
+
+### Analytics & Stats
+- Volume, sets, and personal record charts (Recharts)
+- Weekly vs previous week comparison
+- Smart insights engine
+- Muscle group heatmap (SVG front/back body overlay)
+- XP level system with progression badges
+
+### AI Coach
+- Rule-based recommendation engine analyzing workout history
+- Detects: inactivity, overtraining, push/pull imbalance, leg day skipping, core neglect, progressive overload opportunities
+- Fitness score 0–100 with tier labels (Beginner → Elite)
+- Personalized 7-day weekly training plan
+
+### Nutrition
+- Daily food logging with macro breakdown (calories, protein, carbs, fat)
+- Live food search via Open Food Facts API
+- Meal grouping (breakfast, lunch, dinner, snacks)
+- Day navigation and custom nutrition goals
+
+### Other Pages
+- Achievements — 20+ unlockable badges with progress tracking
+- Leaderboard — ranked by workouts, volume, or duration (real backend data)
+- Body Measurements — AreaChart, BMI calculator, color-coded delta stats
+- Water Intake — circular ring tracker with 7-day history
+- Progress Photos — before/after comparison with timeline gallery
+- Workout Calendar — monthly heatmap view
+- Workout Templates, Reminders, Tips, Exercise Library
+- Calculators — 1RM (4 formulas), TDEE, Macro splitter
+- Daily Challenges — XP-based challenge system
+
+### PWA
+- Installable on desktop and mobile
+- Offline support via service worker
+- Push notifications for workout reminders
+- App shortcuts and splash screens
 
 ---
 
-## 📦 İçerikler
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS |
+| Routing | React Router v6 (28 lazy-loaded pages) |
+| Charts | Recharts |
+| i18n | i18next — English, Turkish, Polish |
+| Backend | Node.js, Express, TypeScript |
+| ORM | Prisma + SQLite |
+| Auth | JWT (jsonwebtoken) |
+| API Docs | Swagger UI at `/api/docs` |
+| Testing | Vitest (31 frontend), Jest+Supertest (11 backend), Playwright E2E (42 tests) |
+| CI/CD | GitHub Actions (3 jobs: backend, frontend, E2E) |
+| Deployment | Docker multi-stage builds + nginx reverse proxy |
+
+---
+
+## Project Structure
 
 ```
 fittrack-complete/
-├── backend/                 # Node.js + Express + TypeScript + Prisma
+├── backend/                  # Node.js + Express API
 │   ├── src/
-│   │   ├── routes/         # API endpoints (auth, exercise, workout)
-│   │   ├── services/       # Business logic (auth, prisma)
-│   │   ├── middleware/     # Auth middleware
-│   │   ├── types/          # TypeScript definitions
-│   │   └── server.ts       # Entry point
-│   ├── prisma/
-│   │   ├── schema.prisma   # Database schema (SQLite)
-│   │   └── seed.ts         # Sample data
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── .env                # Environment variables (hazır!)
-│   └── .gitignore
-│
-└── web/                     # React + TypeScript + Tailwind CSS
-    ├── src/
-    │   ├── pages/          # HomePage, LoginPage, RegisterPage
-    │   ├── components/     # ExerciseList
-    │   ├── services/       # API client (axios)
-    │   ├── App.tsx
-    │   ├── main.tsx
-    │   └── index.css
-    ├── package.json
-    ├── vite.config.ts
-    ├── tailwind.config.js
-    ├── tsconfig.json
-    └── index.html
+│   │   ├── routes/           # auth, workouts, exercises, nutrition, metrics, users
+│   │   ├── services/         # PrismaService with all DB methods
+│   │   ├── middleware/       # JWT auth middleware
+│   │   └── server.ts
+│   ├── prisma/schema.prisma
+│   └── Dockerfile
+├── web/                      # React frontend
+│   ├── src/
+│   │   ├── pages/            # 28 pages (all lazy-loaded)
+│   │   ├── components/       # Shared components
+│   │   ├── contexts/         # ThemeContext, ToastContext
+│   │   ├── hooks/            # useCountUp, useDebounce, useScrollToTop, ...
+│   │   ├── utils/            # aiRecommendations, statsHelper, pdfGenerator, ...
+│   │   ├── i18n/             # EN / TR / PL translations
+│   │   └── services/api.ts   # Centralized apiClient (axios + interceptors)
+│   ├── e2e/                  # Playwright E2E tests
+│   ├── public/               # PWA assets, service worker, manifest
+│   └── Dockerfile
+├── .github/workflows/ci.yml  # GitHub Actions CI/CD
+├── docker-compose.yml
+└── README.md
 ```
 
 ---
 
-## ⚡ HIZLI BAŞLANGIÇ (5 Dakika!)
+## Getting Started
 
-### Adım 1: Backend Kurulum (2 dakika)
+### Prerequisites
+- Node.js 22+
+- npm
+
+### Local Development
 
 ```bash
-# Backend klasörüne git
+# 1. Clone the repo
+git clone https://github.com/Sm3th/FitTrackApp.git
+cd FitTrackApp
+
+# 2. Start the backend
 cd backend
-
-# Paketleri kur
 npm install
+npx prisma db push
+npm run dev          # runs on http://localhost:3000
 
-# Prisma setup
-npx prisma generate
-npx prisma migrate dev --name init
-npm run prisma:seed
-
-# Server başlat
-npm run dev
-```
-
-**Göreceksin:**
-```
-🚀 FitTrack Pro Backend Server
-📡 Server running on port 3000
-```
-
-### Adım 2: Frontend Kurulum (2 dakika)
-
-```bash
-# YENİ terminal aç
+# 3. Start the frontend (new terminal)
 cd web
-
-# Paketleri kur
 npm install
-
-# Dev server başlat
-npm run dev
+npm run dev          # runs on http://localhost:5173
 ```
 
-**Göreceksin:**
-```
-  VITE v5.0.8  ready in 523 ms
+### Environment Variables
 
-  ➜  Local:   http://localhost:5173/
-```
-
-### Adım 3: Test Et! (1 dakika)
-
-**Tarayıcıda aç:**
-```
-http://localhost:5173
-```
-
-**Demo User ile Login:**
-```
-Email: demo@fittrack.com
-Password: demo123456
-```
-
-**✅ ÇALIŞIYOR!** 🎉
-
----
-
-## 🎯 Özellikler
-
-### ✅ Tamamlanmış:
-
-**Backend:**
-- ✅ RESTful API (8 endpoint)
-- ✅ JWT Authentication
-- ✅ SQLite Database (Prisma ORM)
-- ✅ Password Hashing (bcrypt)
-- ✅ TypeScript
-- ✅ Error Handling
-
-**Frontend:**
-- ✅ React 18 + TypeScript
-- ✅ Tailwind CSS
-- ✅ React Router
-- ✅ Axios HTTP Client
-- ✅ Responsive Design
-- ✅ Authentication Flow
-- ✅ Exercise Library
-- ✅ Filtering System
-
-**Database:**
-- ✅ 8 Tables (Users, Exercises, Workouts, etc.)
-- ✅ 10 Sample Exercises
-- ✅ 1 Demo User
-- ✅ Sample Workout
-- ✅ Nutrition Logs
-- ✅ Body Metrics
-- ✅ Goals
-
----
-
-## 📊 Database Schema
-
-```
-┌─────────────────────────────────────┐
-│         FITTRACK DATABASE            │
-│           (SQLite)                   │
-└─────────────────────────────────────┘
-
-Tables (8):
-├── users            → Kullanıcılar
-├── user_profiles    → Profil bilgileri
-├── exercises        → Egzersiz kütüphanesi (10 adet)
-├── workout_sessions → Antrenman oturumları
-├── exercise_sets    → Set detayları
-├── nutrition_logs   → Beslenme kayıtları
-├── body_metrics     → Vücut ölçümleri
-└── goals            → Hedefler
-```
-
----
-
-## 🛠️ Kullanılabilir Komutlar
-
-### Backend:
-```bash
-npm run dev          # Development server başlat
-npm run build        # Production build
-npm start            # Production server
-npm run prisma:studio # Database GUI aç
-npm run prisma:seed  # Sample data ekle
-npm run db:reset     # Database sıfırla
-```
-
-### Frontend:
-```bash
-npm run dev          # Development server başlat
-npm run build        # Production build
-npm run preview      # Production preview
-```
-
----
-
-## 📡 API Endpoints
-
-### Authentication:
-```
-POST /api/auth/register  # Kullanıcı kaydı
-POST /api/auth/login     # Giriş
-```
-
-### Exercises:
-```
-GET /api/exercises                    # Tüm egzersizler
-GET /api/exercises/:id                # Tek egzersiz
-GET /api/exercises/muscle/:group      # Kas grubuna göre
-```
-
-### Workouts (Auth Required):
-```
-POST /api/workouts/sessions/start     # Antrenman başlat
-GET /api/workouts/sessions            # Kullanıcı antrenmanları
-GET /api/workouts/sessions/:id        # Tek antrenman
-PATCH /api/workouts/sessions/:id/end  # Antrenman bitir
-```
-
----
-
-## 🎁 Demo Data
-
-Migration sonrası otomatik eklenir:
-
-**10 Egzersiz:**
-1. Barbell Bench Press (Chest)
-2. Squat (Legs)
-3. Deadlift (Back)
-4. Pull-ups (Back)
-5. Dumbbell Shoulder Press (Shoulders)
-6. Push-ups (Chest)
-7. Barbell Rows (Back)
-8. Lunges (Legs)
-9. Plank (Core)
-10. Running (Cardio)
-
-**Demo User:**
-- Email: demo@fittrack.com
-- Password: demo123456
-- Profile: 28 yaş, erkek, 178cm, 80kg
-
----
-
-## 🔧 Konfigürasyon
-
-### Backend .env (Zaten hazır!):
-```bash
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-JWT_EXPIRE=7d
+**Backend** — create `backend/.env`:
+```env
 PORT=3000
-NODE_ENV=development
+DATABASE_URL=file:./prisma/fittrack.db
+JWT_SECRET=your-secret-key-minimum-32-characters
 ```
 
-### Frontend Proxy (Zaten yapılandırılmış!):
-```typescript
-// vite.config.ts
-server: {
-  port: 5173,
-  proxy: {
-    '/api': 'http://localhost:3000'
-  }
-}
+**Frontend** — create `web/.env`:
+```env
+VITE_API_URL=http://localhost:3000/api
 ```
 
 ---
 
-## 💾 Database Yönetimi
+## Docker
 
-### Prisma Studio (GUI):
 ```bash
-cd backend
-npm run prisma:studio
-```
-Açılır: http://localhost:5555
-
-**Yapabileceklerin:**
-- Tüm tabloları görüntüle
-- Verileri düzenle
-- Yeni kayıt ekle
-- İlişkileri gör
-
-### Database Dosyası:
-```
-backend/prisma/dev.db  ← Tüm veriler burada!
+JWT_SECRET=your-secret-key docker-compose up --build
 ```
 
-**Yedekleme:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:3000
+- API Docs: http://localhost:3000/api/docs
+
+---
+
+## Testing
+
 ```bash
-cp backend/prisma/dev.db backend/prisma/dev.db.backup
-```
+# Frontend unit tests (Vitest — 31 tests)
+cd web && npm test
 
-**Sıfırlama:**
-```bash
-cd backend
-npm run db:reset
-# Evet de, hepsini siler ve yeniden oluşturur
+# Backend tests (Jest + Supertest — 11 tests)
+cd backend && npm test
+
+# E2E tests (Playwright — 42 tests, Chromium + Pixel 7 mobile)
+cd web && npm run test:e2e
 ```
 
 ---
 
-## 🎨 Frontend Sayfaları
+## Deployment
 
-### 1. HomePage (/)
-- Hero section
-- Feature cards (Workout, Nutrition, Analytics)
-- Exercise library
-- Muscle group filtering
-- Login/Logout nav
+### Frontend — Vercel
+1. Import repo on [vercel.com](https://vercel.com)
+2. Set **Root Directory** to `web`
+3. Add environment variable: `VITE_API_URL=https://your-backend.railway.app/api`
 
-### 2. LoginPage (/login)
-- Email/password form
-- Form validation
-- Token storage
-- Auto-redirect
-
-### 3. RegisterPage (/register)
-- Full registration form
-- Password validation
-- Auto-login
-- Error handling
+### Backend — Railway
+1. Import repo on [railway.app](https://railway.app)
+2. Set **Root Directory** to `backend`
+3. Add environment variables:
+   ```
+   JWT_SECRET=your-production-secret-minimum-32-chars
+   DATABASE_URL=file:/data/fittrack.db
+   PORT=3000
+   ```
+4. Add a **Volume** mounted at `/data`
 
 ---
 
-## 🧪 Test Senaryoları
+## API Reference
 
-### 1. Health Check:
-```bash
-curl http://localhost:3000/health
-```
+Full interactive docs at `/api/docs` (Swagger UI).
 
-### 2. Register:
-```bash
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@test.com",
-    "username": "testuser",
-    "password": "test123456",
-    "fullName": "Test User"
-  }'
-```
-
-### 3. Login:
-```bash
-curl -X POST http://localhost:3000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "demo@fittrack.com",
-    "password": "demo123456"
-  }'
-```
-
-### 4. Get Exercises:
-```bash
-curl http://localhost:3000/api/exercises
-```
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/auth/register` | — | Register new user |
+| POST | `/api/auth/login` | — | Login |
+| GET | `/api/workouts/sessions` | JWT | List sessions |
+| POST | `/api/workouts/sessions/start` | JWT | Start session |
+| PATCH | `/api/workouts/sessions/:id/end` | JWT | End session |
+| POST | `/api/workouts/sets` | JWT | Log a set |
+| GET | `/api/exercises` | — | List exercises |
+| GET | `/api/nutrition` | JWT | Get nutrition logs |
+| POST | `/api/nutrition` | JWT | Add food entry |
+| GET | `/api/metrics` | JWT | Get body metrics |
+| POST | `/api/metrics` | JWT | Add metric |
+| GET | `/api/users/leaderboard` | JWT | Get leaderboard |
+| GET | `/api/users/me` | JWT | Get current user |
+| PATCH | `/api/users/me` | JWT | Update profile |
 
 ---
 
-## 🆘 Sorun Giderme
+## License
 
-### "Module not found"
-```bash
-# Backend veya web klasöründe:
-rm -rf node_modules package-lock.json
-npm install
-```
-
-### "Prisma Client not generated"
-```bash
-cd backend
-npx prisma generate
-```
-
-### "Database file not found"
-```bash
-cd backend
-npx prisma migrate dev --name init
-npm run prisma:seed
-```
-
-### "Port already in use"
-```bash
-# Backend için (port 3000):
-# Windows: netstat -ano | findstr :3000
-# Mac/Linux: lsof -i :3000
-
-# Frontend için (port 5173):
-# vite.config.ts'de portu değiştir
-```
-
-### Backend çalışmıyor
-```bash
-cd backend
-
-# .env dosyası var mı kontrol et
-cat .env
-
-# Paketler kurulu mu?
-npm install
-
-# Prisma hazır mı?
-npx prisma generate
-
-# Tekrar dene
-npm run dev
-```
-
----
-
-## 📖 Teknolojiler
-
-### Backend:
-- **Runtime:** Node.js 20.x
-- **Framework:** Express.js 4.18
-- **Language:** TypeScript 5.3
-- **Database:** SQLite (Prisma ORM 5.8)
-- **Auth:** JWT + bcrypt
-- **Tools:** ts-node-dev, dotenv, cors
-
-### Frontend:
-- **Framework:** React 18.2
-- **Language:** TypeScript 5.3
-- **Styling:** Tailwind CSS 3.3
-- **Build:** Vite 5.0
-- **Routing:** React Router 6.20
-- **HTTP:** Axios 1.6
-
----
-
-## 🎯 Sonraki Adımlar
-
-Proje çalışıyor! Şimdi ekleyebileceklerin:
-
-### Hafta 1-2:
-- [ ] Workout tracking UI
-- [ ] Exercise set logging
-- [ ] Timer component
-- [ ] Workout history page
-
-### Hafta 3-4:
-- [ ] User dashboard
-- [ ] Statistics cards
-- [ ] Progress charts
-- [ ] Goal tracking UI
-
-### Gelecek:
-- [ ] Nutrition tracking module
-- [ ] Body measurements UI
-- [ ] Photo upload
-- [ ] Social features
-- [ ] Mobile app (React Native)
-
----
-
-## 📝 Proje Yapısı Detay
-
-### Backend Routes:
-```typescript
-// auth.routes.ts
-POST /api/auth/register  → Kullanıcı kaydı
-POST /api/auth/login     → Giriş
-
-// exercise.routes.ts
-GET /api/exercises           → Tüm egzersizler
-GET /api/exercises/:id       → ID ile
-GET /api/exercises/muscle/:group → Filtreleme
-
-// workout.routes.ts (Protected)
-POST /api/workouts/sessions/start  → Başlat
-GET /api/workouts/sessions         → Liste
-GET /api/workouts/sessions/:id     → Detay
-PATCH /api/workouts/sessions/:id/end → Bitir
-```
-
-### Frontend Components:
-```typescript
-// App.tsx → Router setup
-// HomePage.tsx → Landing + Exercise library
-// LoginPage.tsx → Authentication
-// RegisterPage.tsx → User registration
-// ExerciseList.tsx → Exercise cards + filtering
-// api.ts → Axios client + interceptors
-```
-
----
-
-## 🎊 Tamamlanmış Özellikler
-
-- ✅ Full-stack TypeScript
-- ✅ JWT Authentication
-- ✅ SQLite Database
-- ✅ Prisma ORM
-- ✅ RESTful API
-- ✅ React Frontend
-- ✅ Tailwind Styling
-- ✅ Responsive Design
-- ✅ Form Validation
-- ✅ Error Handling
-- ✅ Sample Data
-- ✅ Database Seeding
-- ✅ Protected Routes
-- ✅ Token Management
-
-**Toplam:** 27 dosya, ~2,000 satır kod!
-
----
-
-## 👤 Geliştirici
-
-**İsmet Organ**  
-IT Project - FitTrack Pro  
-February 2026
-
----
-
-## 📄 License
-
-MIT License - Educational Project
-
----
-
-## 🎉 BAŞARILAR!
-
-**Projen hazır!** Şimdi:
-
-1. ✅ Backend'i başlat (`cd backend && npm run dev`)
-2. ✅ Frontend'i başlat (`cd web && npm run dev`)
-3. ✅ http://localhost:5173 aç
-4. ✅ Login ol: demo@fittrack.com / demo123456
-5. ✅ Kod yazmaya başla! 💪
-
-**İyi çalışmalar!** 🚀
+MIT

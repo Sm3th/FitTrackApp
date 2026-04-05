@@ -2,21 +2,15 @@ import { Router, Request, Response } from 'express';
 import { authService } from '../services/auth.service';
 import { db } from '../services/prisma.service';
 import { RegisterInput, LoginInput } from '../types';
+import { validate } from '../middleware/validate.middleware';
+import { registerSchema, loginSchema } from '../schemas';
 
 const router = Router();
 
 // Register
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', validate(registerSchema), async (req: Request, res: Response) => {
   try {
     const { email, username, password, fullName }: RegisterInput = req.body;
-
-    // Validation
-    if (!email || !username || !password) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email, username, and password are required',
-      });
-    }
 
     if (password.length < 6) {
       return res.status(400).json({
@@ -82,7 +76,7 @@ router.post('/register', async (req: Request, res: Response) => {
 });
 
 // Login
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', validate(loginSchema), async (req: Request, res: Response) => {
   try {
     const { email, password }: LoginInput = req.body;
 

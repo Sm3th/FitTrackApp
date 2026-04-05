@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '../services/api';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -72,12 +73,16 @@ const BodyMeasurementsPage: React.FC = () => {
     save(updated);
     setShowForm(false);
     setForm({ date: new Date().toISOString().slice(0, 10) });
+    // Sync to backend (fire-and-forget)
+    apiClient.post('/metrics', { weight: entry.weight, bodyFat: entry.bodyFat, chest: entry.chest, waist: entry.waist, hips: entry.hips, arms: entry.leftArm, legs: entry.leftThigh, date: entry.date }).catch(() => {});
   };
 
   const handleDelete = (id: string) => {
     const updated = measurements.filter(m => m.id !== id);
     setMeasurements(updated);
     save(updated);
+    // Sync to backend (fire-and-forget)
+    apiClient.delete(`/metrics/${id}`).catch(() => {});
   };
 
   const latest   = measurements[measurements.length - 1];
