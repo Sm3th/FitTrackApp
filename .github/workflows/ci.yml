@@ -21,12 +21,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: backend/package.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Generate Prisma client
         run: npx prisma generate
@@ -60,12 +60,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: web/package.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run unit tests
         run: npm test
@@ -91,10 +91,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install backend deps
-        run: npm ci
+        run: npm install
         working-directory: backend
 
       - name: Setup backend DB
@@ -115,7 +115,7 @@ jobs:
           JWT_SECRET: e2e-test-secret-key-32chars-min
 
       - name: Install frontend deps
-        run: npm ci
+        run: npm install
         working-directory: web
 
       - name: Start frontend
