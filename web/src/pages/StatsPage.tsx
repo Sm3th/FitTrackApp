@@ -255,7 +255,8 @@ const StatsPage: React.FC = () => {
                         <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                         <Tooltip formatter={(value) => [`${value} workout(s)`, 'Workouts']}
                           contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.15)', background: '#1e293b', color: '#f1f5f9' }} />
-                        <Bar dataKey="count" fill="url(#blueGrad)" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="count" fill="url(#blueGrad)" radius={[6, 6, 0, 0]}
+                          isAnimationActive animationDuration={800} animationEasing="ease-out" />
                         <defs>
                           <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stopColor="#3b82f6" />
@@ -281,7 +282,8 @@ const StatsPage: React.FC = () => {
                         <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                         <Tooltip formatter={(value) => [`${value} kg`, 'Volume']}
                           contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.15)', background: '#1e293b', color: '#f1f5f9' }} />
-                        <Line type="monotone" dataKey="volume" stroke="#8b5cf6" strokeWidth={3} dot={{ fill: '#8b5cf6', r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                        <Line type="monotone" dataKey="volume" stroke="#8b5cf6" strokeWidth={3} dot={{ fill: '#8b5cf6', r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }}
+                          isAnimationActive animationDuration={1000} animationEasing="ease-out" />
                       </LineChart>
                     </ResponsiveContainer>
                   ) : (
@@ -304,7 +306,8 @@ const StatsPage: React.FC = () => {
                         <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                         <Tooltip formatter={(value) => [`${value} workout(s)`, 'Frequency']}
                           contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.15)', background: '#1e293b', color: '#f1f5f9' }} />
-                        <Line type="monotone" dataKey="workouts" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                        <Line type="monotone" dataKey="workouts" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }}
+                          isAnimationActive animationDuration={1000} animationEasing="ease-out" />
                       </LineChart>
                     </ResponsiveContainer>
                   ) : (
@@ -335,27 +338,39 @@ const StatsPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-5">{t('stats.topExercises')}</h2>
-                {topExercises.length > 0 ? (
-                  <div className="space-y-3">
-                    {topExercises.map((exercise, index) => (
-                      <div key={index} className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-slate-800/50">
-                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm text-white ${
-                          index === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-500' :
-                          index === 1 ? 'bg-gradient-to-br from-slate-400 to-slate-500' :
-                          index === 2 ? 'bg-gradient-to-br from-amber-600 to-amber-700' :
-                          'bg-gradient-to-br from-blue-500 to-indigo-500'
-                        }`}>
-                          {index + 1}
+                {topExercises.length > 0 ? (() => {
+                  const maxSets = Math.max(...topExercises.map(e => e.totalSets));
+                  return (
+                    <div className="space-y-3 stagger-children">
+                      {topExercises.map((exercise, index) => (
+                        <div key={index} className="p-3 rounded-xl bg-gray-50 dark:bg-slate-800/50">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center font-black text-xs text-white ${
+                              index === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-500' :
+                              index === 1 ? 'bg-gradient-to-br from-slate-400 to-slate-500' :
+                              index === 2 ? 'bg-gradient-to-br from-amber-600 to-amber-700' :
+                              'bg-gradient-to-br from-blue-500 to-indigo-500'
+                            }`}>{index + 1}</div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold text-gray-900 dark:text-white text-sm truncate">{exercise.name}</div>
+                            </div>
+                            <div className="text-sm font-black text-orange-500 tabular-nums">{exercise.totalSets}×</div>
+                          </div>
+                          {/* Animated bar */}
+                          <div className="h-1.5 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-500 progress-animated"
+                              style={{
+                                width: `${(exercise.totalSets / maxSets) * 100}%`,
+                                transitionDelay: `${index * 80 + 200}ms`,
+                              }} />
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">Max {exercise.maxWeight}kg</div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-gray-900 dark:text-white text-sm truncate">{exercise.name}</div>
-                          <div className="text-xs text-gray-400">{exercise.totalSets} sets · Max {exercise.maxWeight}kg</div>
-                        </div>
-                        <div className="text-sm font-bold text-orange-500">{exercise.totalSets}×</div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
+                      ))}
+                    </div>
+                  );
+                })() : (
                   <div className="text-center py-8 text-gray-400 dark:text-gray-600">{t('stats.noExercises')}</div>
                 )}
               </div>
@@ -371,9 +386,9 @@ const StatsPage: React.FC = () => {
                   )}
                 </div>
                 {personalRecords.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="space-y-3 stagger-children">
                     {personalRecords.map((pr, index) => (
-                      <div key={index} className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-slate-800/50">
+                      <div key={index} className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 dark:bg-slate-800/50 card-lift">
                         <div className="flex-shrink-0 text-2xl">
                           {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏅'}
                         </div>

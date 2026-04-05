@@ -182,13 +182,14 @@ const GoalsPage: React.FC = () => {
         {activeGoals.length > 0 ? (
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">Active Goals</h2>
-            {activeGoals.map(goal => {
+            {activeGoals.map((goal, idx) => {
               const pct = progressPct(goal.currentValue, goal.targetValue, goal.currentValue);
               const remaining = daysLeft(goal.targetDate);
               const isOverdue = remaining === 0;
               return (
                 <div key={goal.id}
-                  className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-6 hover:shadow-lg transition-shadow">
+                  className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-6 card-lift animate-fade-up"
+                  style={{ animationDelay: `${idx * 70}ms`, animationFillMode: 'both' }}>
                   <div className="flex items-start gap-4">
                     {/* Ring */}
                     <div className="relative flex-shrink-0">
@@ -222,8 +223,8 @@ const GoalsPage: React.FC = () => {
                           <span>{goal.targetValue} {goal.unit}</span>
                         </div>
                         <div className="h-2 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full transition-all duration-700"
-                            style={{ width: `${pct}%`, background: 'linear-gradient(to right, var(--p-from), var(--p-to))' }} />
+                          <div className="h-full rounded-full progress-animated"
+                            style={{ width: `${pct}%`, background: 'linear-gradient(to right, var(--p-from), var(--p-to))', transitionDelay: `${idx * 70 + 300}ms` }} />
                         </div>
                       </div>
 
