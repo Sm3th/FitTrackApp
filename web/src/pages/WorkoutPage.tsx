@@ -134,13 +134,7 @@ const WorkoutPage: React.FC = () => {
 
         {/* Start form */}
         {!activeWorkout && (
-          <div className="rounded-2xl p-8 animate-fade-up"
-            style={{
-              background: 'rgba(255,255,255,0.97)',
-              border: '1px solid rgba(0,0,0,0.06)',
-              boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
-            }}>
-            <style>{`.dark .workout-form { background: rgba(18,20,31,0.97) !important; border-color: rgba(255,255,255,0.07) !important; box-shadow: 0 4px 24px rgba(0,0,0,0.35) !important; }`}</style>
+          <div className="surface-form rounded-2xl p-8 animate-fade-up">
             <div className="mb-6">
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2.5">
                 {t('workout.workoutNameOptional')}
@@ -172,15 +166,9 @@ const WorkoutPage: React.FC = () => {
         {/* Active workout */}
         {activeWorkout && (
           <div className="space-y-5 animate-fade-up">
-            <div className="rounded-2xl overflow-hidden"
-              style={{
-                background: 'rgba(255,255,255,0.97)',
-                border: '1px solid rgba(0,0,0,0.06)',
-                boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
-              }}>
+            <div className="surface-form rounded-2xl overflow-hidden">
               {/* Top bar */}
-              <div className="flex items-center justify-between px-6 py-4"
-                style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700/60">
                 <div>
                   <h2 className="text-lg font-black text-gray-900 dark:text-white">
                     {activeWorkout.name || 'Workout Session'}

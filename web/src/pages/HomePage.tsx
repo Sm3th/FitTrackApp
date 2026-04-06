@@ -309,70 +309,45 @@ const HomePage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Total Workouts */}
             <button onClick={() => navigate('/workout-history')}
-              className="group text-left rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 active:scale-98 overflow-hidden"
-              style={{
-                background: 'rgba(255,255,255,0.97)',
-                border: '1px solid rgba(0,0,0,0.06)',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.1), 0 4px 16px rgba(0,0,0,0.06), 0 1px 0 rgba(255,255,255,0.8) inset',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 28px 80px rgba(0,0,0,0.14), 0 6px 24px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.8) inset')}
-              onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 20px 60px rgba(0,0,0,0.1), 0 4px 16px rgba(0,0,0,0.06), 0 1px 0 rgba(255,255,255,0.8) inset')}
-            >
-              <style>{`.dark .stat-lift { background: rgba(18,20,31,0.98) !important; border-color: rgba(255,255,255,0.07) !important; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.04) inset !important; }`}</style>
+              className="surface-elevated group text-left rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] overflow-hidden">
               <div className="flex items-start justify-between mb-5">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300"
                   style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)', boxShadow: '0 8px 20px rgba(59,130,246,0.35)' }}>
                   💪
                 </div>
-                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-1 rounded-full border border-emerald-100 dark:border-emerald-900/50">
                   {t('common.today')}
                 </span>
               </div>
               <div className="text-4xl font-black text-gray-900 dark:text-white mb-1 tabular-nums">
                 {loading ? <span className="opacity-20">—</span> : animatedWorkouts}
               </div>
-              <div className="text-sm font-semibold text-gray-400">{t('home.totalWorkouts')}</div>
+              <div className="text-sm font-semibold text-gray-400 dark:text-gray-500">{t('home.totalWorkouts')}</div>
             </button>
 
             {/* Total Sets */}
             <button onClick={() => navigate('/stats')}
-              className="stat-lift group text-left rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 active:scale-98 overflow-hidden"
-              style={{
-                background: 'rgba(255,255,255,0.97)',
-                border: '1px solid rgba(0,0,0,0.06)',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.1), 0 4px 16px rgba(0,0,0,0.06), 0 1px 0 rgba(255,255,255,0.8) inset',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 28px 80px rgba(0,0,0,0.14), 0 6px 24px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.8) inset')}
-              onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 20px 60px rgba(0,0,0,0.1), 0 4px 16px rgba(0,0,0,0.06), 0 1px 0 rgba(255,255,255,0.8) inset')}
-            >
+              className="surface-elevated group text-left rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] overflow-hidden">
               <div className="flex items-start justify-between mb-5">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300"
                   style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', boxShadow: '0 8px 20px rgba(16,185,129,0.35)' }}>
                   🎯
                 </div>
-                <span className="text-xs font-bold text-cyan-600 bg-cyan-50 px-2.5 py-1 rounded-full border border-cyan-100">
+                <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/50 px-2.5 py-1 rounded-full border border-cyan-100 dark:border-cyan-900/50">
                   {t('common.sets')}
                 </span>
               </div>
               <div className="text-4xl font-black text-gray-900 dark:text-white mb-1 tabular-nums">
                 {loading ? <span className="opacity-20">—</span> : animatedSets.toLocaleString()}
               </div>
-              <div className="text-sm font-semibold text-gray-400">{t('home.setsLogged')}</div>
+              <div className="text-sm font-semibold text-gray-400 dark:text-gray-500">{t('home.setsLogged')}</div>
             </button>
 
             {/* Streak */}
             <button onClick={() => navigate('/calendar')}
-              className="stat-lift group text-left rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 active:scale-98 overflow-hidden"
-              style={{
-                background: stats.currentStreak >= 7
-                  ? 'linear-gradient(135deg, rgba(249,115,22,0.06), rgba(239,68,68,0.04))'
-                  : 'rgba(255,255,255,0.97)',
-                border: stats.currentStreak >= 7 ? '1px solid rgba(249,115,22,0.2)' : '1px solid rgba(0,0,0,0.06)',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.1), 0 4px 16px rgba(0,0,0,0.06), 0 1px 0 rgba(255,255,255,0.8) inset',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 28px 80px rgba(0,0,0,0.14), 0 6px 24px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.8) inset')}
-              onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 20px 60px rgba(0,0,0,0.1), 0 4px 16px rgba(0,0,0,0.06), 0 1px 0 rgba(255,255,255,0.8) inset')}
-            >
+              className={`surface-elevated group text-left rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] overflow-hidden ${
+                stats.currentStreak >= 7 ? 'streak-hot' : ''
+              }`}>
               <div className="flex items-start justify-between mb-5">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300 ${stats.currentStreak >= 3 ? 'animate-float' : ''}`}
                   style={{
@@ -383,18 +358,14 @@ const HomePage: React.FC = () => {
                   }}>
                   🔥
                 </div>
-                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                  stats.currentStreak >= 7
-                    ? 'text-orange-600 bg-orange-50 border border-orange-100'
-                    : 'text-orange-500 bg-orange-50 border border-orange-100'
-                }`}>
+                <span className="text-xs font-bold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/50 px-2.5 py-1 rounded-full border border-orange-100 dark:border-orange-900/50">
                   {stats.currentStreak > 0 ? `${stats.currentStreak} ${t('water.days')}` : '🔥'}
                 </span>
               </div>
               <div className="text-4xl font-black text-gray-900 dark:text-white mb-1 tabular-nums">
                 {loading ? <span className="opacity-20">—</span> : animatedStreak}
               </div>
-              <div className="text-sm font-semibold text-gray-400">{t('home.dayStreak')}</div>
+              <div className="text-sm font-semibold text-gray-400 dark:text-gray-500">{t('home.dayStreak')}</div>
               {!loading && <div className={`text-xs font-bold mt-1 ${streakMsg.color}`}>{streakMsg.text}</div>}
             </button>
           </div>
@@ -407,22 +378,17 @@ const HomePage: React.FC = () => {
           <div className="grid grid-cols-2 gap-3">
             {/* Calories */}
             <button onClick={() => navigate('/nutrition')}
-              className="group stat-lift text-left rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1"
-              style={{
-                background: 'linear-gradient(135deg, rgba(16,185,129,0.06), rgba(6,182,212,0.04))',
-                border: '1px solid rgba(16,185,129,0.15)',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-              }}>
+              className="surface-tinted-green group text-left rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-base group-hover:scale-110 inline-block transition-transform">🥗</span>
-                    <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('home.todayNutrition')}</span>
+                    <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">{t('home.todayNutrition')}</span>
                   </div>
                   <div className="text-2xl font-black text-gray-900 dark:text-white tabular-nums">{todayCalories.toLocaleString()}</div>
                   <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 font-medium">{t('home.kcalLoggedToday')}</div>
                   {todayCalories === 0 ? (
-                    <div className="mt-2 text-xs text-emerald-500 font-bold">{t('home.startTracking')}</div>
+                    <div className="mt-2 text-xs text-emerald-600 dark:text-emerald-400 font-bold">{t('home.startTracking')}</div>
                   ) : calorieStreak > 1 ? (
                     <div className="mt-2 flex items-center gap-1">
                       <span className="text-xs">{calorieStreak >= 7 ? '🔥' : '✅'}</span>
@@ -435,7 +401,7 @@ const HomePage: React.FC = () => {
                 <TodayRing
                   pct={Math.min((todayCalories / 2000) * 100, 100)}
                   color="#10b981"
-                  trackColor="rgba(16,185,129,0.1)"
+                  trackColor="rgba(16,185,129,0.12)"
                   label={`${Math.round((todayCalories / 2000) * 100)}%`}
                 />
               </div>
@@ -443,27 +409,22 @@ const HomePage: React.FC = () => {
 
             {/* Water */}
             <button onClick={() => navigate('/water')}
-              className="group stat-lift text-left rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1"
-              style={{
-                background: 'linear-gradient(135deg, rgba(6,182,212,0.06), rgba(59,130,246,0.04))',
-                border: '1px solid rgba(6,182,212,0.15)',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-              }}>
+              className="surface-tinted-cyan group text-left rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-base group-hover:scale-110 inline-block transition-transform">💧</span>
-                    <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('home.waterToday')}</span>
+                    <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">{t('home.waterToday')}</span>
                   </div>
                   <div className="text-2xl font-black text-gray-900 dark:text-white tabular-nums">
-                    {todayWater.current}<span className="text-sm font-semibold text-gray-400 ml-0.5">ml</span>
+                    {todayWater.current}<span className="text-sm font-semibold text-gray-400 dark:text-gray-500 ml-0.5">ml</span>
                   </div>
                   <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 font-medium">{t('home.waterConsumed')}</div>
                 </div>
                 <TodayRing
                   pct={Math.min((todayWater.current / todayWater.goal) * 100, 100)}
                   color="#06b6d4"
-                  trackColor="rgba(6,182,212,0.1)"
+                  trackColor="rgba(6,182,212,0.12)"
                   label={`${Math.round((todayWater.current / todayWater.goal) * 100)}%`}
                 />
               </div>
@@ -499,11 +460,7 @@ const HomePage: React.FC = () => {
       {/* ── Achievement teaser ──────────────────────────────── */}
       {isLoggedIn && stats.totalWorkouts > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-          <div className="relative overflow-hidden rounded-2xl p-6"
-            style={{
-              background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(249,115,22,0.06))',
-              border: '1px solid rgba(245,158,11,0.18)',
-            }}>
+          <div className="surface-achievement relative overflow-hidden rounded-2xl p-6">
             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-8xl opacity-[0.07] pointer-events-none select-none">🏆</div>
             <div className="relative flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
@@ -544,20 +501,7 @@ const HomePage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
           {features.map((f) => (
             <div key={f.title}
-              className="group rounded-2xl p-7 transition-all duration-300 cursor-default card-hover"
-              style={{
-                background: 'rgba(255,255,255,0.8)',
-                border: '1px solid rgba(0,0,0,0.06)',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.border = '1px solid color-mix(in srgb, var(--p-500) 30%, transparent)';
-                e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.1)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.border = '1px solid rgba(0,0,0,0.06)';
-                e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.05)';
-              }}>
+              className="surface-feature group rounded-2xl p-7 transition-all duration-300 cursor-default">
               <div className="text-4xl mb-4 icon-hover inline-block">{f.icon}</div>
               <h3 className="text-base font-black text-gray-900 dark:text-gray-100 mb-2 tracking-tight">{f.title}</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-normal">{f.desc}</p>

@@ -78,32 +78,21 @@ export const LoginPage: React.FC = () => {
             background: 'rgba(255,255,255,0.04)',
             border: '1px solid rgba(255,255,255,0.08)',
             backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
             boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.05) inset',
           }}>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-white/60 uppercase tracking-widest mb-2">{t('auth.email')}</label>
+              <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">{t('auth.email')}</label>
               <input type="email" name="email" value={formData.email} onChange={handleChange}
                 placeholder="your@email.com" required
-                className="w-full px-4 py-3.5 rounded-xl text-white placeholder-white/25 focus:outline-none transition-all"
-                style={{
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1.5px solid rgba(255,255,255,0.1)',
-                }}
-                onFocus={e => { e.currentTarget.style.border = '1.5px solid var(--p-500)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--p-ring)'; }}
-                onBlur={e => { e.currentTarget.style.border = '1.5px solid rgba(255,255,255,0.1)'; e.currentTarget.style.boxShadow = ''; }} />
+                className="input-dark w-full px-4 py-3.5 rounded-xl transition-all" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-white/60 uppercase tracking-widest mb-2">{t('auth.password')}</label>
+              <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">{t('auth.password')}</label>
               <input type="password" name="password" value={formData.password} onChange={handleChange}
                 placeholder="••••••••" required
-                className="w-full px-4 py-3.5 rounded-xl text-white placeholder-white/25 focus:outline-none transition-all"
-                style={{
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1.5px solid rgba(255,255,255,0.1)',
-                }}
-                onFocus={e => { e.currentTarget.style.border = '1.5px solid var(--p-500)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--p-ring)'; }}
-                onBlur={e => { e.currentTarget.style.border = '1.5px solid rgba(255,255,255,0.1)'; e.currentTarget.style.boxShadow = ''; }} />
+                className="input-dark w-full px-4 py-3.5 rounded-xl transition-all" />
             </div>
             <button type="submit" disabled={loading}
               className="btn-primary w-full py-3.5 disabled:opacity-50 disabled:cursor-not-allowed text-base">

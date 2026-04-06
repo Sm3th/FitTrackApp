@@ -117,17 +117,11 @@ const Navbar: React.FC = () => {
   return (
     <>
       <nav
-        className="sticky top-0 z-50 backdrop-blur-2xl"
+        className="sticky top-0 z-50 surface-nav backdrop-blur-2xl"
         style={{
-          background: 'rgba(255,255,255,0.88)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
           transform: hidden ? 'translateY(-100%)' : 'translateY(0)',
           transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1)',
         }}>
-        {/* Dark mode override via class */}
-        <style>{`
-          .dark nav { background: rgba(13,15,26,0.92) !important; border-bottom-color: rgba(255,255,255,0.05) !important; }
-        `}</style>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
 
@@ -230,13 +224,7 @@ const Navbar: React.FC = () => {
                     </button>
 
                     {settingsOpen && (
-                      <div className="absolute right-0 top-11 w-80 rounded-2xl z-50 animate-slide-down overflow-hidden"
-                        style={{
-                          background: 'rgba(255,255,255,0.96)',
-                          border: '1px solid rgba(0,0,0,0.08)',
-                          boxShadow: '0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08)',
-                          backdropFilter: 'blur(20px)',
-                        }}>
+                      <div className="absolute right-0 top-11 w-80 rounded-2xl z-50 animate-slide-down overflow-hidden surface-dropdown">
                         <div className="p-5">
                           <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">{t('settings.appearance')}</p>
 
@@ -279,7 +267,7 @@ const Navbar: React.FC = () => {
                                   className={`flex-1 py-2.5 rounded-xl font-bold transition-all ${s.size} ${
                                     fontSize === s.key
                                       ? 'text-white shadow-lg'
-                                      : 'bg-gray-100 dark:bg-[#1a1d2e] text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#20233a]'
+                                      : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700'
                                   }`}
                                   style={fontSize === s.key ? { background: 'linear-gradient(135deg, var(--p-from), var(--p-to))' } : {}}>
                                   {s.label}
@@ -303,7 +291,7 @@ const Navbar: React.FC = () => {
                                   className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                                     i18n.language === lang.code
                                       ? 'text-white shadow-lg'
-                                      : 'bg-gray-100 dark:bg-[#1a1d2e] text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#20233a]'
+                                      : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700'
                                   }`}
                                   style={i18n.language === lang.code ? { background: 'linear-gradient(135deg, var(--p-from), var(--p-to))' } : {}}
                                   title={lang.label}
@@ -315,7 +303,7 @@ const Navbar: React.FC = () => {
                             </div>
                           </div>
 
-                          <div className="border-t border-gray-100 dark:border-[#1e2235] pt-4">
+                          <div className="border-t border-gray-100 dark:border-slate-700 pt-4">
                             <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">{t('settings.quickLinks')}</p>
                             <div className="grid grid-cols-2 gap-1">
                               {moreLinks.map(link => (

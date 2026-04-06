@@ -697,3 +697,133 @@ button, a, [role="button"] {
 .quick-link-card:hover::after {
   background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%);
 }
+
+/* ─── Light/dark adaptive surface classes ────────────── */
+/* Use these instead of inline style={{ background }} to get dark mode support */
+
+.surface-elevated {
+  background: rgba(255,255,255,0.97);
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05), 0 1px 0 rgba(255,255,255,0.8) inset;
+}
+.dark .surface-elevated {
+  background: #12141f;
+  border-color: #1e2235;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.04) inset;
+}
+.surface-elevated:hover {
+  box-shadow: 0 28px 80px rgba(0,0,0,0.12), 0 6px 24px rgba(0,0,0,0.07), 0 1px 0 rgba(255,255,255,0.8) inset;
+}
+.dark .surface-elevated:hover {
+  box-shadow: 0 28px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+.surface-form {
+  background: rgba(255,255,255,0.97);
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+.dark .surface-form {
+  background: #12141f;
+  border-color: #1e2235;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.03) inset;
+}
+
+.surface-dropdown {
+  background: rgba(255,255,255,0.97);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.dark .surface-dropdown {
+  background: rgba(16,18,28,0.98);
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 1px 0 rgba(255,255,255,0.04) inset;
+}
+
+.surface-feature {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+.dark .surface-feature {
+  background: #12141f;
+  border-color: #1e2235;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+.surface-feature:hover {
+  border-color: color-mix(in srgb, var(--p-500) 30%, transparent) !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.09);
+  transform: translateY(-4px);
+}
+.dark .surface-feature:hover {
+  border-color: color-mix(in srgb, var(--p-500) 25%, transparent) !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+}
+
+.surface-tinted-green {
+  background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(6,182,212,0.04));
+  border: 1px solid rgba(16,185,129,0.15);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+.dark .surface-tinted-green {
+  background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(6,182,212,0.06));
+  border-color: rgba(16,185,129,0.22);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.surface-tinted-cyan {
+  background: linear-gradient(135deg, rgba(6,182,212,0.06), rgba(59,130,246,0.04));
+  border: 1px solid rgba(6,182,212,0.15);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+.dark .surface-tinted-cyan {
+  background: linear-gradient(135deg, rgba(6,182,212,0.1), rgba(59,130,246,0.06));
+  border-color: rgba(6,182,212,0.22);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.surface-achievement {
+  background: linear-gradient(135deg, rgba(245,158,11,0.07), rgba(249,115,22,0.05));
+  border: 1px solid rgba(245,158,11,0.16);
+}
+.dark .surface-achievement {
+  background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(249,115,22,0.07));
+  border-color: rgba(245,158,11,0.22);
+}
+
+/* Navbar glass surface */
+.surface-nav {
+  background: rgba(255,255,255,0.9);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.dark .surface-nav {
+  background: rgba(13,15,26,0.94);
+  border-bottom-color: rgba(255,255,255,0.05);
+}
+
+/* Bottom nav surface */
+.surface-bottom-nav {
+  background: rgba(255,255,255,0.94);
+  border-top: 1px solid rgba(0,0,0,0.07);
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.06);
+}
+.dark .surface-bottom-nav {
+  background: rgba(13,15,26,0.97);
+  border-top-color: rgba(255,255,255,0.06);
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
+}
+
+/* Dark input for login page */
+.input-dark {
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  color: white;
+}
+.input-dark::placeholder { color: rgba(255,255,255,0.25); }
+.input-dark:focus {
+  border-color: var(--p-500);
+  box-shadow: 0 0 0 3px var(--p-ring);
+  outline: none;
+}

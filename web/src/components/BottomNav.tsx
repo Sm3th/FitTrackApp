@@ -75,27 +75,8 @@ const BottomNav: React.FC = () => {
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      {/* Top border glow line */}
-      <div className="h-px w-full" style={{
-        background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent)',
-      }} />
-
-      <div
-        className="backdrop-blur-2xl"
-        style={{
-          background: 'rgba(255,255,255,0.93)',
-          borderTop: '1px solid rgba(0,0,0,0.07)',
-          boxShadow: '0 -8px 32px rgba(0,0,0,0.08)',
-        }}
-      >
-        <style>{`
-          .dark .bottom-nav-inner {
-            background: rgba(13,15,26,0.97) !important;
-            border-top-color: rgba(255,255,255,0.06) !important;
-            box-shadow: 0 -8px 32px rgba(0,0,0,0.5) !important;
-          }
-        `}</style>
-        <div className="bottom-nav-inner relative flex items-center h-[60px] px-2">
+      <div className="surface-bottom-nav backdrop-blur-2xl">
+        <div className="relative flex items-center h-[60px] px-2">
 
           {/* Sliding active pill */}
           <SlidingPill tabs={tabs} activeIdx={activeIdx} />
