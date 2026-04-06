@@ -22,4 +22,4 @@ ENV NODE_ENV=production
 ENV DATABASE_URL=file:/data/fittrack.db
 
 EXPOSE 3000
-CMD ["sh", "-c", "npx prisma db push && node dist/server.js"]
+CMD ["sh", "-c", "npx prisma db push --skip-generate --accept-data-loss && node dist/server.js"]
