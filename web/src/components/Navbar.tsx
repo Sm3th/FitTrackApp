@@ -117,56 +117,71 @@ const Navbar: React.FC = () => {
   return (
     <>
       <nav
-        className="sticky top-0 z-50 border-b border-gray-200/60 dark:border-slate-800/60 backdrop-blur-xl bg-white/85 dark:bg-slate-950/90 transition-colors duration-300"
+        className="sticky top-0 z-50 backdrop-blur-2xl"
         style={{
+          background: 'rgba(255,255,255,0.88)',
+          borderBottom: '1px solid rgba(0,0,0,0.06)',
           transform: hidden ? 'translateY(-100%)' : 'translateY(0)',
-          transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1), background-color 0.3s, border-color 0.3s',
+          transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1)',
         }}>
+        {/* Dark mode override via class */}
+        <style>{`
+          .dark nav { background: rgba(13,15,26,0.92) !important; border-bottom-color: rgba(255,255,255,0.05) !important; }
+        `}</style>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
 
             {/* Logo */}
             <button
               onClick={() => handleNavigation('/')}
-              className="flex items-center gap-2.5 group"
+              className="flex items-center gap-2.5 group shrink-0"
             >
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-lg transition-all duration-300"
-                style={{ background: 'linear-gradient(135deg, var(--p-from), var(--p-to))', boxShadow: '0 4px 16px var(--p-shadow)' }}>
-                <span className="text-white text-sm font-black">F</span>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
+                style={{
+                  background: 'linear-gradient(135deg, var(--p-from), var(--p-to))',
+                  boxShadow: '0 4px 16px var(--p-shadow), 0 1px 0 rgba(255,255,255,0.2) inset',
+                }}>
+                <span className="text-white text-base font-black tracking-tighter">F</span>
               </div>
-              <span className="text-lg font-black tracking-tight bg-clip-text text-transparent"
-                style={{ backgroundImage: 'linear-gradient(to right, var(--p-from), var(--p-to))' }}>
-                FitTrack Pro
-              </span>
+              <div className="flex flex-col leading-none">
+                <span className="text-base font-black tracking-tight"
+                  style={{ backgroundImage: 'linear-gradient(135deg, var(--p-from), var(--p-to))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  FitTrack
+                </span>
+                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 tracking-widest uppercase -mt-0.5">Pro</span>
+              </div>
             </button>
 
             {/* Desktop Nav */}
             {isLoggedIn && (
-              <div className="hidden lg:flex items-center gap-1">
+              <div className="hidden lg:flex items-center gap-0.5">
                 {navLinks.map(link => (
                   <button
                     key={link.path}
                     onClick={() => navigate(link.path)}
-                    className={`relative px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    className={`relative px-3.5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
                       isActive(link.path)
-                        ? 'dark:bg-white/5'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-slate-800'
+                        ? ''
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100/80 dark:hover:bg-white/[0.06]'
                     }`}
-                    style={isActive(link.path) ? { color: 'var(--p-text)', background: 'color-mix(in srgb, var(--p-500) 10%, transparent)' } : {}}
+                    style={isActive(link.path) ? {
+                      color: 'var(--p-text)',
+                      background: 'color-mix(in srgb, var(--p-500) 12%, transparent)',
+                    } : {}}
                   >
                     {link.label}
                     {isActive(link.path) && (
-                      <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-                        style={{ background: 'var(--p-500)' }} />
+                      <span className="nav-dot absolute bottom-1 left-1/2 w-1 h-1 rounded-full"
+                        style={{ background: 'var(--p-500)', transform: 'translateX(-50%)' }} />
                     )}
                   </button>
                 ))}
                 <button
                   onClick={() => setSettingsOpen(true)}
-                  className="px-3.5 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-slate-800 flex items-center gap-1 transition-all duration-200"
+                  className="px-3.5 py-2 rounded-xl text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100/80 dark:hover:bg-white/[0.06] flex items-center gap-1 transition-all duration-200"
                 >
                   {t('nav.more')}
-                  <svg className="w-3.5 h-3.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
@@ -174,13 +189,13 @@ const Navbar: React.FC = () => {
             )}
 
             {/* Right Controls */}
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-1.5">
               {isLoggedIn && (
                 <>
                   {/* Shortcut hint */}
                   <button
                     onClick={() => setShowShortcuts(true)}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 text-xs font-mono font-bold transition-all"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] text-xs font-mono font-bold transition-all"
                     title="Keyboard shortcuts"
                   >
                     ?
@@ -189,7 +204,7 @@ const Navbar: React.FC = () => {
                   {/* Dark mode toggle */}
                   <button
                     onClick={toggleTheme}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-all"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:text-gray-700 dark:hover:text-gray-200 transition-all"
                   >
                     {theme === 'light'
                       ? <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
@@ -201,7 +216,12 @@ const Navbar: React.FC = () => {
                   <div className="relative" ref={settingsRef}>
                     <button
                       onClick={() => setSettingsOpen(!settingsOpen)}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-all"
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                        settingsOpen
+                          ? 'text-white'
+                          : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.06] hover:text-gray-700 dark:hover:text-gray-200'
+                      }`}
+                      style={settingsOpen ? { background: 'linear-gradient(135deg, var(--p-from), var(--p-to))' } : {}}
                       title="Settings"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,95 +230,102 @@ const Navbar: React.FC = () => {
                     </button>
 
                     {settingsOpen && (
-                      <div className="absolute right-0 top-11 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-800 p-5 z-50 animate-slide-down">
-                        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">{t('settings.appearance')}</p>
+                      <div className="absolute right-0 top-11 w-80 rounded-2xl z-50 animate-slide-down overflow-hidden"
+                        style={{
+                          background: 'rgba(255,255,255,0.96)',
+                          border: '1px solid rgba(0,0,0,0.08)',
+                          boxShadow: '0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08)',
+                          backdropFilter: 'blur(20px)',
+                        }}>
+                        <div className="p-5">
+                          <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">{t('settings.appearance')}</p>
 
-                        <div className="flex justify-between items-center mb-5">
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.darkMode')}</span>
-                          <button onClick={toggleTheme}
-                            className="relative w-11 h-6 rounded-full transition-colors duration-200"
-                            style={{ background: theme === 'dark' ? 'var(--p-500)' : '#e5e7eb' }}>
-                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${theme === 'dark' ? 'translate-x-5' : ''}`} />
-                          </button>
-                        </div>
-
-                        <div className="mb-5">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t('settings.colorTheme')}</p>
-                          <div className="flex gap-2">
-                            {colorOptions.map(c => (
-                              <button key={c.value} onClick={() => setColorTheme(c.value)} title={c.label}
-                                className={`relative w-10 h-10 rounded-xl ${c.bg} transition-all hover:scale-105 active:scale-95`}>
-                                {colorTheme === c.value && (
-                                  <span className="absolute inset-0 flex items-center justify-center">
-                                    <svg className="w-4 h-4 text-white drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                  </span>
-                                )}
-                              </button>
-                            ))}
+                          <div className="flex justify-between items-center mb-4">
+                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('settings.darkMode')}</span>
+                            <button onClick={toggleTheme}
+                              className="relative w-12 h-6 rounded-full transition-all duration-300"
+                              style={{ background: theme === 'dark' ? 'linear-gradient(135deg, var(--p-from), var(--p-to))' : '#e5e7eb' }}>
+                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ${theme === 'dark' ? 'translate-x-6' : ''}`} />
+                            </button>
                           </div>
-                        </div>
 
-                        <div className="mb-5">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('settings.fontSize')}</p>
-                          <div className="flex gap-2">
-                            {([
-                              { key: 'small',  label: 'A',  size: 'text-xs'  },
-                              { key: 'medium', label: 'A',  size: 'text-sm'  },
-                              { key: 'large',  label: 'A',  size: 'text-base' },
-                            ] as const).map(s => (
-                              <button key={s.key} onClick={() => setFontSize(s.key)}
-                                className={`flex-1 py-2.5 rounded-xl font-semibold transition-all ${s.size} ${
-                                  fontSize === s.key
-                                    ? 'text-white shadow-lg'
-                                    : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700'
-                                }`}
-                                style={fontSize === s.key ? { background: 'linear-gradient(to right, var(--p-from), var(--p-to))' } : {}}>
-                                {s.label}
-                              </button>
-                            ))}
+                          <div className="mb-4">
+                            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2.5">{t('settings.colorTheme')}</p>
+                            <div className="flex gap-2">
+                              {colorOptions.map(c => (
+                                <button key={c.value} onClick={() => setColorTheme(c.value)} title={c.label}
+                                  className={`relative w-10 h-10 rounded-xl ${c.bg} transition-all hover:scale-110 active:scale-95 shadow-sm`}>
+                                  {colorTheme === c.value && (
+                                    <span className="absolute inset-0 flex items-center justify-center">
+                                      <svg className="w-4 h-4 text-white drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </span>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                          <div className="flex text-[10px] text-gray-400 mt-1.5">
-                            <span className="flex-1 text-center">{t('settings.small')}</span>
-                            <span className="flex-1 text-center">{t('settings.medium')}</span>
-                            <span className="flex-1 text-center">{t('settings.large')}</span>
-                          </div>
-                        </div>
 
-                        {/* Language switcher */}
-                        <div className="mb-5">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('settings.language')}</p>
-                          <div className="flex gap-2">
-                            {SUPPORTED_LANGUAGES.map(lang => (
-                              <button
-                                key={lang.code}
-                                onClick={() => changeLanguage(lang.code)}
-                                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all ${
-                                  i18n.language === lang.code
-                                    ? 'text-white shadow-lg'
-                                    : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700'
-                                }`}
-                                style={i18n.language === lang.code ? { background: 'linear-gradient(to right, var(--p-from), var(--p-to))' } : {}}
-                                title={lang.label}
-                              >
-                                <span>{lang.flag}</span>
-                                <span>{lang.code.toUpperCase()}</span>
-                              </button>
-                            ))}
+                          <div className="mb-4">
+                            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('settings.fontSize')}</p>
+                            <div className="flex gap-2">
+                              {([
+                                { key: 'small',  label: 'A',  size: 'text-xs'  },
+                                { key: 'medium', label: 'A',  size: 'text-sm'  },
+                                { key: 'large',  label: 'A',  size: 'text-base' },
+                              ] as const).map(s => (
+                                <button key={s.key} onClick={() => setFontSize(s.key)}
+                                  className={`flex-1 py-2.5 rounded-xl font-bold transition-all ${s.size} ${
+                                    fontSize === s.key
+                                      ? 'text-white shadow-lg'
+                                      : 'bg-gray-100 dark:bg-[#1a1d2e] text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#20233a]'
+                                  }`}
+                                  style={fontSize === s.key ? { background: 'linear-gradient(135deg, var(--p-from), var(--p-to))' } : {}}>
+                                  {s.label}
+                                </button>
+                              ))}
+                            </div>
+                            <div className="flex text-[10px] text-gray-400 mt-1.5">
+                              <span className="flex-1 text-center">{t('settings.small')}</span>
+                              <span className="flex-1 text-center">{t('settings.medium')}</span>
+                              <span className="flex-1 text-center">{t('settings.large')}</span>
+                            </div>
                           </div>
-                        </div>
 
-                        <div className="border-t border-gray-100 dark:border-slate-800 pt-4">
-                          <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">{t('settings.quickLinks')}</p>
-                          <div className="grid grid-cols-2 gap-1">
-                            {moreLinks.map(link => (
-                              <button key={link.path} onClick={() => { navigate(link.path); setSettingsOpen(false); }}
-                                className={`text-left px-3 py-2 rounded-xl text-xs font-medium transition-all ${isActive(link.path) ? '' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-gray-100'}`}
-                                style={isActive(link.path) ? { background: 'color-mix(in srgb, var(--p-500) 10%, transparent)', color: 'var(--p-text)' } : undefined}>
-                                {link.label}
-                              </button>
-                            ))}
+                          <div className="mb-4">
+                            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('settings.language')}</p>
+                            <div className="flex gap-2">
+                              {SUPPORTED_LANGUAGES.map(lang => (
+                                <button
+                                  key={lang.code}
+                                  onClick={() => changeLanguage(lang.code)}
+                                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                                    i18n.language === lang.code
+                                      ? 'text-white shadow-lg'
+                                      : 'bg-gray-100 dark:bg-[#1a1d2e] text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#20233a]'
+                                  }`}
+                                  style={i18n.language === lang.code ? { background: 'linear-gradient(135deg, var(--p-from), var(--p-to))' } : {}}
+                                  title={lang.label}
+                                >
+                                  <span>{lang.flag}</span>
+                                  <span>{lang.code.toUpperCase()}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="border-t border-gray-100 dark:border-[#1e2235] pt-4">
+                            <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">{t('settings.quickLinks')}</p>
+                            <div className="grid grid-cols-2 gap-1">
+                              {moreLinks.map(link => (
+                                <button key={link.path} onClick={() => { navigate(link.path); setSettingsOpen(false); }}
+                                  className={`text-left px-3 py-2 rounded-xl text-xs font-medium transition-all ${isActive(link.path) ? '' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100/80 dark:hover:bg-white/[0.05] hover:text-gray-900 dark:hover:text-gray-100'}`}
+                                  style={isActive(link.path) ? { background: 'color-mix(in srgb, var(--p-500) 12%, transparent)', color: 'var(--p-text)' } : undefined}>
+                                  {link.label}
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -306,12 +333,15 @@ const Navbar: React.FC = () => {
                   </div>
 
                   {/* Divider */}
-                  <div className="w-px h-6 bg-gray-200 dark:bg-slate-700 mx-1" />
+                  <div className="w-px h-5 bg-gray-200 dark:bg-white/10 mx-0.5" />
 
                   {/* User avatar */}
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md"
-                      style={{ background: 'linear-gradient(135deg, var(--p-from), var(--p-to))' }}>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black shadow-lg"
+                      style={{
+                        background: 'linear-gradient(135deg, var(--p-from), var(--p-to))',
+                        boxShadow: '0 2px 8px var(--p-shadow)',
+                      }}>
                       {initials}
                     </div>
                     <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 hidden lg:block">
@@ -320,7 +350,7 @@ const Navbar: React.FC = () => {
                   </div>
 
                   <button onClick={handleLogout}
-                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 font-medium transition-colors px-2">
+                    className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 font-semibold transition-colors px-2 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20">
                     {t('nav.signOut')}
                   </button>
                 </>

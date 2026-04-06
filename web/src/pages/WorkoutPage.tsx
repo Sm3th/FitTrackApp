@@ -98,17 +98,35 @@ const WorkoutPage: React.FC = () => {
       <Navbar />
 
       {/* Page Hero */}
-      <div className="relative bg-slate-950 overflow-hidden py-12">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-indigo-600/10" />
-        <div className="absolute inset-0 opacity-[0.04]"
-          style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
+      <div className="relative overflow-hidden py-14" style={{ background: '#080a12' }}>
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/3 w-[400px] h-[400px] rounded-full blur-[100px] opacity-20"
+            style={{ background: 'var(--p-from)' }} />
+          <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] rounded-full blur-[80px] opacity-15"
+            style={{ background: 'var(--p-to)' }} />
+          <div className="absolute inset-0"
+            style={{
+              backgroundImage: 'linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px)',
+              backgroundSize: '40px 40px',
+            }} />
+        </div>
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6">
-          <h1 className="text-4xl font-black text-white tracking-tight mb-1">
-            {activeWorkout ? `🏋️ ${t('workout.activeWorkout')}` : `💪 ${t('workout.startWorkout')}`}
-          </h1>
-          <p className="text-white/40 text-sm">
-            {activeWorkout ? `${t('workout.startedAt')} ${new Date(activeWorkout.startTime).toLocaleTimeString()}` : t('workout.giveItAName')}
-          </p>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+              style={{ background: 'linear-gradient(135deg, var(--p-from), var(--p-to))', boxShadow: '0 4px 16px var(--p-shadow)' }}>
+              {activeWorkout ? '🏋️' : '💪'}
+            </div>
+            <div>
+              <h1 className="text-3xl font-black text-white tracking-tight leading-none">
+                {activeWorkout ? t('workout.activeWorkout') : t('workout.startWorkout')}
+              </h1>
+              <p className="text-white/35 text-sm mt-0.5 font-normal">
+                {activeWorkout
+                  ? `${t('workout.startedAt')} ${new Date(activeWorkout.startTime).toLocaleTimeString()}`
+                  : t('workout.giveItAName')}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -116,9 +134,15 @@ const WorkoutPage: React.FC = () => {
 
         {/* Start form */}
         {!activeWorkout && (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-8 animate-fade-up">
+          <div className="rounded-2xl p-8 animate-fade-up"
+            style={{
+              background: 'rgba(255,255,255,0.97)',
+              border: '1px solid rgba(0,0,0,0.06)',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
+            }}>
+            <style>{`.dark .workout-form { background: rgba(18,20,31,0.97) !important; border-color: rgba(255,255,255,0.07) !important; box-shadow: 0 4px 24px rgba(0,0,0,0.35) !important; }`}</style>
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2.5">
                 {t('workout.workoutNameOptional')}
               </label>
               <input
@@ -133,14 +157,14 @@ const WorkoutPage: React.FC = () => {
             <button onClick={handleStartWorkout} disabled={loading}
               className="btn-primary w-full text-base py-4 disabled:opacity-50">
               {loading ? (
-                <span className="flex items-center justify-center gap-2">
+                <>
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                   {t('workout.starting')}
-                </span>
+                </>
               ) : t('workout.startBtn')}
             </button>
             <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-3">
-              {t('workout.pressEnter')} <kbd className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono">N</kbd> {t('workout.toStartQuickly')}
+              {t('workout.pressEnter')} <kbd className="bg-gray-100 dark:bg-[#1a1d2e] px-1.5 py-0.5 rounded font-mono text-gray-600 dark:text-gray-400">N</kbd> {t('workout.toStartQuickly')}
             </p>
           </div>
         )}
@@ -148,9 +172,15 @@ const WorkoutPage: React.FC = () => {
         {/* Active workout */}
         {activeWorkout && (
           <div className="space-y-5 animate-fade-up">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="rounded-2xl overflow-hidden"
+              style={{
+                background: 'rgba(255,255,255,0.97)',
+                border: '1px solid rgba(0,0,0,0.06)',
+                boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
+              }}>
               {/* Top bar */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-800">
+              <div className="flex items-center justify-between px-6 py-4"
+                style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
                 <div>
                   <h2 className="text-lg font-black text-gray-900 dark:text-white">
                     {activeWorkout.name || 'Workout Session'}
@@ -159,12 +189,14 @@ const WorkoutPage: React.FC = () => {
                     Started {new Date(activeWorkout.startTime).toLocaleTimeString()}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
-                    style={{ background: 'color-mix(in srgb, var(--p-500) 12%, transparent)', color: 'var(--p-text)' }}>
-                    <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--p-500)' }} />
-                    <WorkoutTimer startTime={activeWorkout.startTime} />
-                  </div>
+                <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-black"
+                  style={{
+                    background: 'color-mix(in srgb, var(--p-500) 12%, transparent)',
+                    color: 'var(--p-text)',
+                    border: '1px solid color-mix(in srgb, var(--p-500) 20%, transparent)',
+                  }}>
+                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--p-500)' }} />
+                  <WorkoutTimer startTime={activeWorkout.startTime} />
                 </div>
               </div>
               <div className="p-6">
@@ -173,7 +205,13 @@ const WorkoutPage: React.FC = () => {
             </div>
 
             <button onClick={handleEndWorkout} disabled={loading}
-              className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-red-500/20 hover:shadow-red-500/30 transition-all duration-200 active:scale-95 disabled:opacity-50">
+              className="w-full text-white font-black py-4 rounded-2xl transition-all duration-200 active:scale-95 disabled:opacity-50"
+              style={{
+                background: 'linear-gradient(135deg, #ef4444, #f43f5e)',
+                boxShadow: '0 8px 24px rgba(239,68,68,0.3)',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 12px 32px rgba(239,68,68,0.45)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 8px 24px rgba(239,68,68,0.3)'; e.currentTarget.style.transform = ''; }}>
               {loading ? t('workout.finishing') : t('workout.endWorkout')}
             </button>
           </div>
