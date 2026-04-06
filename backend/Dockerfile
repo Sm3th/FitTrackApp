@@ -15,7 +15,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/prisma ./prisma
 
-RUN mkdir -p /data
+RUN mkdir -p /data && chmod 777 /data
 
 ENV NODE_ENV=production
 ENV DATABASE_URL=file:/data/fittrack.db
