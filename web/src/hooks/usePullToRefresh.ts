@@ -4,6 +4,7 @@ interface Options {
   onRefresh: () => Promise<void>;
   threshold?: number;   // px to trigger refresh (default 70)
   resistance?: number;  // pull resistance factor (default 2.5)
+  disabled?: boolean;
 }
 
 /**
@@ -11,14 +12,14 @@ interface Options {
  * Returns `pullY` (current pull distance) and `refreshing` state.
  * Attach touch handlers to the scroll container.
  */
-export function usePullToRefresh({ onRefresh, threshold = 70, resistance = 2.5 }: Options) {
+export function usePullToRefresh({ onRefresh, threshold = 70, resistance = 2.5, disabled = false }: Options) {
   const [pullY, setPullY] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const startY = useRef<number | null>(null);
   const pulling = useRef(false);
 
   const onTouchStart = useCallback((e: TouchEvent) => {
-    if (window.scrollY > 0) return;
+    if (disabled || window.scrollY > 0) return;
     startY.current = e.touches[0].clientY;
   }, []);
 

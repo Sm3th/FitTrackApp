@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
 import ActiveWorkout from '../components/ActiveWorkout';
@@ -10,6 +10,9 @@ import { useToast } from '../hooks/useToast';
 import { soundEffects } from '../utils/soundEffects';
 import { haptics } from '../utils/haptics';
 import { useTranslation } from 'react-i18next';
+import { calculateWorkoutXP, getLevelFromXP, getTotalXP, addXP } from '../utils/xpSystem';
+import { appendWorkoutSets } from '../utils/bodyScore';
+import XPResultScreen from '../components/XPResultScreen';
 
 interface WorkoutSession {
   id: string;
@@ -24,8 +27,12 @@ const STAR_COLORS = ['', 'text-red-400', 'text-orange-400', 'text-yellow-400', '
 
 const WorkoutPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const navState = (location.state as { suggestedExercises?: string[]; muscleName?: string } | null);
   const [activeWorkout, setActiveWorkout] = useState<WorkoutSession | null>(null);
-  const [workoutName, setWorkoutName] = useState('');
+  const [workoutName, setWorkoutName] = useState(
+    navState?.muscleName ? `${navState.muscleName} Day` : ''
+  );
   const [loading, setLoading] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
@@ -33,6 +40,11 @@ const WorkoutPage: React.FC = () => {
   const [hoveredStar, setHoveredStar] = useState(0);
   const [ratingNote, setRatingNote] = useState('');
   const [completedSets] = useState<{ exerciseName: string; reps?: number; weight?: number }[]>([]);
+  const [showXPScreen, setShowXPScreen] = useState(false);
+  const [xpGain, setXpGain] = useState<import('../utils/xpSystem').XPGain | null>(null);
+  const [prevLevelInfo, setPrevLevelInfo] = useState<import('../utils/xpSystem').LevelInfo | null>(null);
+  const [newLevelInfo, setNewLevelInfo] = useState<import('../utils/xpSystem').LevelInfo | null>(null);
+  const [xpLeveledUp, setXpLeveledUp] = useState(false);
   const workoutStartRef = useRef<Date>(new Date());
   const { toast, showToast, hideToast } = useToast();
   const { t } = useTranslation();
@@ -80,9 +92,25 @@ const WorkoutPage: React.FC = () => {
       soundEffects.workoutComplete();
       haptics.workoutComplete();
       showToast('Workout completed! Amazing work! 🎉', 'success');
+
+      // XP calculation
+      const durationSec = Math.floor((new Date().getTime() - workoutStartRef.current.getTime()) / 1000);
+      const gain = calculateWorkoutXP(durationSec, completedSets.length, workoutRating);
+      const prevInfo = getLevelFromXP(getTotalXP());
+      const { newTotal, leveledUp, newLevel: _nl } = addXP(gain.total);
+      const nextInfo = getLevelFromXP(newTotal);
+      setXpGain(gain);
+      setPrevLevelInfo(prevInfo);
+      setNewLevelInfo(nextInfo);
+      setXpLeveledUp(leveledUp);
+
+      // Persist muscle sets to body score history
+      if (completedSets.length > 0) appendWorkoutSets(completedSets);
+
       setShowSummary(true);
       setActiveWorkout(null);
       setWorkoutRating(0); setRatingNote('');
+      setTimeout(() => setShowXPScreen(true), 800);
     } catch (error) {
       showToast('Failed to end workout', 'error');
       soundEffects.error();
@@ -98,7 +126,7 @@ const WorkoutPage: React.FC = () => {
       <Navbar />
 
       {/* Page Hero */}
-      <div className="relative overflow-hidden py-14" style={{ background: '#080a12' }}>
+      <div className="relative overflow-hidden py-10 sm:py-14" style={{ background: '#080a12' }}>
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/3 w-[400px] h-[400px] rounded-full blur-[100px] opacity-20"
             style={{ background: 'var(--p-from)' }} />
@@ -130,7 +158,7 @@ const WorkoutPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto px-4 py-5 sm:py-8 sm:px-6 lg:px-8">
 
         {/* Start form */}
         {!activeWorkout && (
@@ -187,8 +215,11 @@ const WorkoutPage: React.FC = () => {
                   <WorkoutTimer startTime={activeWorkout.startTime} />
                 </div>
               </div>
-              <div className="p-6">
-                <ActiveWorkout workoutSessionId={activeWorkout.id} />
+              <div className="p-4 sm:p-6">
+                <ActiveWorkout
+                  workoutSessionId={activeWorkout.id}
+                  suggestedExercises={navState?.suggestedExercises}
+                />
               </div>
             </div>
 
@@ -270,6 +301,16 @@ const WorkoutPage: React.FC = () => {
       )}
 
       {toast.show && <Toast message={toast.message} type={toast.type} onClose={hideToast} />}
+
+      {showXPScreen && xpGain && prevLevelInfo && newLevelInfo && (
+        <XPResultScreen
+          xpGain={xpGain}
+          prevLevelInfo={prevLevelInfo}
+          newLevelInfo={newLevelInfo}
+          leveledUp={xpLeveledUp}
+          onClose={() => setShowXPScreen(false)}
+        />
+      )}
 
       {showSummary && (
         <WorkoutSummaryModal

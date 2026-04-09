@@ -1,9 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
 import { useCountUp } from '../hooks/useCountUp';
 import { useTranslation } from 'react-i18next';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
+import { calculateBodyScores, loadWorkoutSetsFromHistory, MuscleGroup, MUSCLE_EMOJI, getWeeklyMuscleActivity } from '../utils/bodyScore';
+import { getLevelFromXP, getTotalXP } from '../utils/xpSystem';
+
+const MUSCLE_EXERCISES: Record<MuscleGroup, string[]> = {
+  chest: ['Bench Press', 'Push-Up', 'Cable Fly'],
+  back: ['Pull-Up', 'Barbell Row', 'Lat Pulldown'],
+  shoulders: ['Overhead Press', 'Lateral Raise', 'Arnold Press'],
+  biceps: ['Barbell Curl', 'Hammer Curl', 'Preacher Curl'],
+  triceps: ['Skull Crusher', 'Triceps Pushdown', 'Dips'],
+  legs: ['Squat', 'Romanian Deadlift', 'Leg Press'],
+  core: ['Plank', 'Hanging Leg Raise', 'Ab Wheel'],
+  cardio: ['Treadmill Run', 'Jump Rope', 'Rowing Machine'],
+};
 
 const STREAK_COLOR = (streak: number) => {
   if (streak === 0) return 'text-gray-400';
@@ -13,17 +27,6 @@ const STREAK_COLOR = (streak: number) => {
   if (streak < 30) return 'text-pink-400';
   return 'text-yellow-300';
 };
-
-const quickLinks = [
-  { path: '/nutrition',       icon: '🥗', label: 'Nutrition',        grad: 'from-emerald-500 to-teal-500' },
-  { path: '/challenges',      icon: '🎯', label: 'Challenges',       grad: 'from-violet-600 to-purple-600' },
-  { path: '/measurements',   icon: '📏', label: 'Measurements',     grad: 'from-blue-600 to-cyan-500'    },
-  { path: '/water',          icon: '💧', label: 'Water Intake',      grad: 'from-cyan-500 to-blue-500'    },
-  { path: '/calculators',    icon: '💯', label: 'Calculators',       grad: 'from-amber-500 to-orange-500' },
-  { path: '/calendar',       icon: '📅', label: 'Calendar',          grad: 'from-indigo-500 to-blue-600'  },
-  { path: '/exercise-library',icon: '📚', label: 'Exercises',        grad: 'from-yellow-500 to-orange-500'},
-  { path: '/tips',           icon: '💡', label: 'Fitness Tips',      grad: 'from-pink-500 to-rose-500'    },
-];
 
 const features = [
   { icon: '🔥', title: 'Guided Workouts',   desc: 'Follow professionally designed plans with built-in timers.' },
@@ -108,15 +111,35 @@ const HomePage: React.FC = () => {
   const [todayCalories, setTodayCalories] = useState(0);
   const [todayWater, setTodayWater] = useState({ current: 0, goal: 8 });
   const [calorieStreak, setCalorieStreak] = useState(0);
+  const [lastWorkout, setLastWorkout] = useState<{ name: string; date: string; sets: number } | null>(null);
+
+  const bodyScores    = useMemo(() => calculateBodyScores(loadWorkoutSetsFromHistory()), []);
+  const weeklyActivity = useMemo(() => getWeeklyMuscleActivity(), []);
+  const levelInfo      = useMemo(() => getLevelFromXP(getTotalXP()), []);
+
+  const weakestMuscle = useMemo((): MuscleGroup => {
+    let worst: MuscleGroup = 'core'; let low = Infinity;
+    Object.entries(bodyScores.scores).forEach(([m, s]) => {
+      if (s.score < low) { low = s.score; worst = m as MuscleGroup; }
+    });
+    return worst;
+  }, [bodyScores]);
+
+  const loadData = async () => {
+    setTodayCalories(getTodayCalories());
+    setTodayWater(getTodayWater());
+    setCalorieStreak(getCalorieStreak());
+    await fetchStats();
+  };
 
   useEffect(() => {
-    if (isLoggedIn) {
-      fetchStats();
-      setTodayCalories(getTodayCalories());
-      setTodayWater(getTodayWater());
-      setCalorieStreak(getCalorieStreak());
-    }
+    if (isLoggedIn) loadData();
   }, [isLoggedIn]);
+
+  const { pullY, refreshing } = usePullToRefresh({
+    onRefresh: loadData,
+    disabled: !isLoggedIn,
+  });
 
   const fetchStats = async () => {
     try {
@@ -128,6 +151,14 @@ const HomePage: React.FC = () => {
         totalSets: workouts.reduce((s: number, w: any) => s + (w.exerciseSets?.length || 0), 0),
         currentStreak: calculateStreak(workouts),
       });
+      if (workouts.length > 0) {
+        const last = workouts[0];
+        setLastWorkout({
+          name: last.name || 'Workout',
+          date: last.startTime,
+          sets: last.exerciseSets?.length || 0,
+        });
+      }
     } catch { /* ignore */ } finally { setLoading(false); }
   };
 
@@ -163,6 +194,16 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0d0f1a] transition-colors duration-300">
+      {/* Pull-to-refresh indicator */}
+      {(pullY > 0 || refreshing) && (
+        <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center pointer-events-none"
+          style={{ height: Math.max(pullY, refreshing ? 48 : 0), transition: refreshing ? 'none' : 'height 0.2s' }}>
+          <div className={`w-8 h-8 rounded-full border-4 border-white/20 border-t-white flex items-center justify-center ${refreshing ? 'animate-spin' : ''}`}
+            style={{ background: 'linear-gradient(135deg, var(--p-from), var(--p-to))', opacity: Math.min(pullY / 48, 1) }}>
+            {!refreshing && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>}
+          </div>
+        </div>
+      )}
       <Navbar />
 
       {/* ── Hero ───────────────────────────────────────────── */}
@@ -190,7 +231,7 @@ const HomePage: React.FC = () => {
         <div className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none"
           style={{ background: 'linear-gradient(to bottom, transparent, #080a12)' }} />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-36 text-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24 sm:pt-24 sm:pb-36 text-center">
           {/* Badge */}
           {isLoggedIn ? (
             <div className="inline-flex items-center gap-2.5 text-sm font-semibold px-5 py-2.5 rounded-full mb-8 animate-fade-up"
@@ -309,7 +350,7 @@ const HomePage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Total Workouts */}
             <button onClick={() => navigate('/workout-history')}
-              className="surface-elevated group text-left rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] overflow-hidden">
+              className="surface-elevated surface-stat-blue card-glow group text-left rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] overflow-hidden">
               <div className="flex items-start justify-between mb-5">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300"
                   style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)', boxShadow: '0 8px 20px rgba(59,130,246,0.35)' }}>
@@ -327,7 +368,7 @@ const HomePage: React.FC = () => {
 
             {/* Total Sets */}
             <button onClick={() => navigate('/stats')}
-              className="surface-elevated group text-left rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] overflow-hidden">
+              className="surface-elevated surface-stat-emerald card-glow group text-left rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] overflow-hidden">
               <div className="flex items-start justify-between mb-5">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300"
                   style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', boxShadow: '0 8px 20px rgba(16,185,129,0.35)' }}>
@@ -345,8 +386,8 @@ const HomePage: React.FC = () => {
 
             {/* Streak */}
             <button onClick={() => navigate('/calendar')}
-              className={`surface-elevated group text-left rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] overflow-hidden ${
-                stats.currentStreak >= 7 ? 'streak-hot' : ''
+              className={`surface-elevated card-glow group text-left rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] overflow-hidden ${
+                stats.currentStreak >= 7 ? 'streak-hot' : 'surface-stat-orange'
               }`}>
               <div className="flex items-start justify-between mb-5">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-300 ${stats.currentStreak >= 3 ? 'animate-float' : ''}`}
@@ -433,86 +474,240 @@ const HomePage: React.FC = () => {
         </section>
       )}
 
-      {/* ── Quick Access ──────────────────────────────────── */}
+      {/* ── Weekly Muscle Activity ───────────────────────── */}
       {isLoggedIn && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">{t('home.quickAccess')}</h2>
-              <div className="h-0.5 w-10 rounded-full mt-1" style={{ background: 'linear-gradient(to right, var(--p-from), var(--p-to))' }} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 stagger-children">
-            {quickLinks.map(item => (
-              <button key={item.path} onClick={() => navigate(item.path)}
-                className={`quick-link-card bg-gradient-to-br ${item.grad} ripple-container`}
-                style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
-                <div className="relative z-10">
-                  <div className="text-3xl mb-3 icon-hover inline-block">{item.icon}</div>
-                  <div className="font-bold text-sm leading-tight tracking-tight">{item.label}</div>
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+          <button
+            onClick={() => navigate('/body-score')}
+            className="w-full text-left surface-elevated card-glow rounded-2xl p-5 transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.99]"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-0.5">
+                  📅 {t('home.thisWeek', 'This Week')}
                 </div>
-              </button>
+                <div className="text-sm font-black text-gray-900 dark:text-white">
+                  {t('home.muscleActivity', 'Muscle Activity')}
+                </div>
+              </div>
+              <span className="text-xs font-bold text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                {t('home.viewBodyScore', 'Body Score')} →
+              </span>
+            </div>
+
+            {/* Muscle bars — 4 columns */}
+            <div className="grid grid-cols-4 gap-2.5">
+              {(['chest','back','shoulders','legs','biceps','triceps','core','cardio'] as MuscleGroup[]).map(muscle => {
+                const sets = weeklyActivity[muscle];
+                const maxSets = Math.max(...Object.values(weeklyActivity), 1);
+                const pct = sets > 0 ? Math.max((sets / maxSets) * 100, 14) : 0;
+                const col = bodyScores.scores[muscle].color;
+                const trained = sets > 0;
+                return (
+                  <div key={muscle} className="flex flex-col items-center gap-1.5">
+                    {/* Vertical fill bar */}
+                    <div
+                      className="w-full rounded-xl relative overflow-hidden"
+                      style={{ height: 48, background: trained ? `${col}15` : 'rgba(0,0,0,0.05)', border: trained ? `1px solid ${col}22` : '1px solid transparent' }}
+                    >
+                      <div
+                        className="absolute bottom-0 left-0 right-0 rounded-xl transition-all duration-700"
+                        style={{ height: `${pct}%`, background: trained ? col : 'transparent', opacity: 0.7 }}
+                      />
+                      {trained && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-[11px] font-black text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}>
+                            {sets}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {/* Emoji + label */}
+                    <div className="text-center leading-none">
+                      <div className="text-base leading-none">{MUSCLE_EMOJI[muscle]}</div>
+                      <div className="text-[8px] font-bold mt-0.5 uppercase tracking-wide"
+                        style={{ color: trained ? col : 'rgba(107,114,128,0.5)' }}>
+                        {muscle.slice(0, 4)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer — total sets */}
+            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/[0.05] flex items-center justify-between">
+              <div className="flex gap-3">
+                {Object.values(weeklyActivity).reduce((s, n) => s + n, 0) === 0 ? (
+                  <span className="text-xs text-gray-400 dark:text-gray-600 font-medium">
+                    {t('home.noActivityThisWeek', 'No workouts this week yet')}
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-xs font-black text-gray-700 dark:text-gray-300 tabular-nums">
+                      {Object.values(weeklyActivity).reduce((s, n) => s + n, 0)} {t('common.sets', 'sets')}
+                    </span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">
+                      {Object.values(weeklyActivity).filter(n => n > 0).length} / 8 {t('home.musclesTrained', 'muscles')}
+                    </span>
+                  </>
+                )}
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                style={{ background: 'color-mix(in srgb, var(--p-500) 12%, transparent)', color: 'var(--p-text)' }}>
+                {bodyScores.overallScore}/100
+              </span>
+            </div>
+          </button>
+        </section>
+      )}
+
+      {/* ── Personalized Dashboard (logged in) ──────────────── */}
+      {isLoggedIn && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-4 pb-8">
+
+          {/* XP Level card */}
+          <button onClick={() => navigate('/profile')}
+            className="w-full text-left rounded-2xl p-5 overflow-hidden relative transition-all active:scale-[0.99]"
+            style={{ background: 'linear-gradient(135deg, #1e1b4b, #312e81)', border: '1px solid rgba(99,102,241,0.3)' }}>
+            <div className="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl opacity-20"
+              style={{ background: 'var(--p-to)', transform: 'translate(20%, -20%)' }} />
+            <div className="relative flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black text-white flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg, var(--p-from), var(--p-to))', boxShadow: '0 8px 20px var(--p-shadow)' }}>
+                {levelInfo.level}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-white font-black text-base">{levelInfo.title}</span>
+                  <span className="text-white/50 text-xs font-bold">{getTotalXP().toLocaleString()} XP</span>
+                </div>
+                <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                  <div className="h-full rounded-full transition-all duration-1000"
+                    style={{ width: `${levelInfo.progressPct}%`, background: 'linear-gradient(90deg, var(--p-from), var(--p-to))' }} />
+                </div>
+                <div className="text-white/40 text-xs mt-1">{levelInfo.progressPct}% {t('xp.toLevel', { n: levelInfo.level + 1 })}</div>
+              </div>
+            </div>
+          </button>
+
+          {/* Body Score + Workout Suggestion — 2 columns */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Body Score */}
+            <button onClick={() => navigate('/body-score')}
+              className="text-left rounded-2xl p-4 transition-all active:scale-[0.98]"
+              style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="text-xs font-black text-white/40 uppercase tracking-widest mb-3">🧬 Body Score</div>
+              <div className="text-4xl font-black text-white leading-none mb-1">{bodyScores.overallScore}</div>
+              <div className="h-1.5 rounded-full overflow-hidden mb-2" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                <div className="h-full rounded-full" style={{ width: `${bodyScores.overallScore}%`, background: 'linear-gradient(90deg, var(--p-from), var(--p-to))' }} />
+              </div>
+              <div className="text-white/40 text-xs font-medium">
+                {MUSCLE_EMOJI[weakestMuscle]} {t(`bodyScore.muscles.${weakestMuscle}` as any, weakestMuscle)} needs work →
+              </div>
+            </button>
+
+            {/* Last Workout */}
+            <button onClick={() => navigate('/workout-history')}
+              className="text-left rounded-2xl p-4 transition-all active:scale-[0.98]"
+              style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="text-xs font-black text-white/40 uppercase tracking-widest mb-3">💪 {t('nav.workoutHistory')}</div>
+              {lastWorkout ? (
+                <>
+                  <div className="text-sm font-black text-white leading-tight mb-1 truncate">{lastWorkout.name}</div>
+                  <div className="text-3xl font-black text-white leading-none mb-1">{lastWorkout.sets}</div>
+                  <div className="text-white/40 text-xs font-medium">
+                    {t('common.sets')} · {new Date(lastWorkout.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  </div>
+                </>
+              ) : (
+                <div className="text-white/30 text-sm mt-2">{t('home.noWorkoutsYet', 'Start your first workout!')}</div>
+              )}
+            </button>
+          </div>
+
+          {/* Today's Suggestion */}
+          <button
+            onClick={() => navigate('/body-score', { state: { muscle: weakestMuscle } })}
+            className="w-full text-left rounded-2xl p-5 transition-all active:scale-[0.99] relative overflow-hidden"
+            style={{
+              background: `linear-gradient(135deg, color-mix(in srgb, ${bodyScores.scores[weakestMuscle].color} 15%, #0f172a), #0f172a)`,
+              border: `1px solid color-mix(in srgb, ${bodyScores.scores[weakestMuscle].color} 25%, transparent)`,
+            }}>
+            <div className="absolute right-4 top-4 text-5xl opacity-10 select-none">💡</div>
+            <div className="text-xs font-black uppercase tracking-widest mb-2"
+              style={{ color: bodyScores.scores[weakestMuscle].color }}>
+              {t('home.todaySuggestion', "Today's Suggestion")}
+            </div>
+            <div className="text-white font-black text-lg mb-3">
+              {MUSCLE_EMOJI[weakestMuscle]} {t(`bodyScore.muscles.${weakestMuscle}` as any, weakestMuscle)} Day
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(MUSCLE_EXERCISES[weakestMuscle] || []).map(ex => (
+                <span key={ex} className="text-xs font-semibold px-2.5 py-1 rounded-lg text-white/70"
+                  style={{ background: 'rgba(255,255,255,0.08)' }}>
+                  {ex}
+                </span>
+              ))}
+            </div>
+            <div className="mt-3 text-xs font-bold" style={{ color: bodyScores.scores[weakestMuscle].color }}>
+              Start workout →
+            </div>
+          </button>
+
+          {/* Explore shortcut */}
+          <button
+            onClick={() => navigate('/explore')}
+            className="w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all active:scale-[0.99]"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
+                style={{ background: 'rgba(255,255,255,0.06)' }}>⚡</div>
+              <div>
+                <div className="text-sm font-black text-white">Explore all features</div>
+                <div className="text-xs text-white/30 font-medium">Programs · Tools · Social · Settings</div>
+              </div>
+            </div>
+            <svg className="w-4 h-4 text-white/20 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+        </section>
+      )}
+
+      {/* ── Features — only for guests ──────────────────────── */}
+      {!isLoggedIn && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-full mb-4"
+              style={{ background: 'color-mix(in srgb, var(--p-500) 10%, transparent)', color: 'var(--p-text)', border: '1px solid color-mix(in srgb, var(--p-500) 20%, transparent)' }}>
+              ◆ FEATURES
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-black text-gray-900 dark:text-white tracking-tight mb-3">
+              {t('home.everythingYouNeed')}
+            </h2>
+            <p className="text-gray-400 dark:text-gray-500 text-lg max-w-xl mx-auto font-normal">
+              {t('home.everythingSubtitle')}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
+            {features.map((f) => (
+              <div key={f.title} className="surface-feature group rounded-2xl p-7 transition-all duration-300 cursor-default">
+                <div className="text-4xl mb-4 icon-hover inline-block">{f.icon}</div>
+                <h3 className="text-base font-black text-gray-900 dark:text-gray-100 mb-2 tracking-tight">{f.title}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-normal">{f.desc}</p>
+              </div>
             ))}
           </div>
         </section>
       )}
 
-      {/* ── Achievement teaser ──────────────────────────────── */}
-      {isLoggedIn && stats.totalWorkouts > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-          <div className="surface-achievement relative overflow-hidden rounded-2xl p-6">
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-8xl opacity-[0.07] pointer-events-none select-none">🏆</div>
-            <div className="relative flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h3 className="text-lg font-black text-gray-900 dark:text-gray-100 mb-1">{t('home.achievements')}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{t('home.achievementsDesc')}</p>
-              </div>
-              <button onClick={() => navigate('/achievements')}
-                className="shrink-0 text-white px-6 py-2.5 rounded-xl font-bold transition-all duration-200 active:scale-95 hover:-translate-y-0.5"
-                style={{
-                  background: 'linear-gradient(135deg, #f59e0b, #f97316)',
-                  boxShadow: '0 6px 20px rgba(245,158,11,0.35)',
-                }}>
-                {t('common.viewAll')} →
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── Features ────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-full mb-4"
-            style={{
-              background: 'color-mix(in srgb, var(--p-500) 10%, transparent)',
-              color: 'var(--p-text)',
-              border: '1px solid color-mix(in srgb, var(--p-500) 20%, transparent)',
-            }}>
-            ◆ FEATURES
-          </div>
-          <h2 className="text-4xl sm:text-5xl font-black text-gray-900 dark:text-white tracking-tight mb-3">
-            {t('home.everythingYouNeed')}
-          </h2>
-          <p className="text-gray-400 dark:text-gray-500 text-lg max-w-xl mx-auto font-normal">
-            {t('home.everythingSubtitle')}
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
-          {features.map((f) => (
-            <div key={f.title}
-              className="surface-feature group rounded-2xl p-7 transition-all duration-300 cursor-default">
-              <div className="text-4xl mb-4 icon-hover inline-block">{f.icon}</div>
-              <h3 className="text-base font-black text-gray-900 dark:text-gray-100 mb-2 tracking-tight">{f.title}</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-normal">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* ── CTA (guests) ───────────────────────────────────── */}
       {!isLoggedIn && (
-        <section className="relative overflow-hidden py-28" style={{ background: '#060810' }}>
+        <section className="relative overflow-hidden py-16 sm:py-28" style={{ background: '#060810' }}>
           {/* Orbs */}
           <div className="absolute top-0 left-1/3 w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none opacity-20"
             style={{ background: 'var(--p-from)' }} />

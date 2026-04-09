@@ -27,9 +27,10 @@ interface ExerciseSet {
 
 interface ActiveWorkoutProps {
   workoutSessionId: string;
+  suggestedExercises?: string[];
 }
 
-const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId }) => {
+const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggestedExercises }) => {
   const [sets, setSets] = useState<ExerciseSet[]>([]);
   const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
   const [reps, setReps] = useState<string>('');
@@ -165,8 +166,55 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId }) => {
 
   const exerciseGuide = currentExercise ? getExerciseGuideByName(currentExercise.name) : null;
 
+  // Track which suggested exercises have been started
+  const startedSuggested = new Set(sets.map(s => s.exerciseName));
+
+  const handlePickSuggested = (name: string) => {
+    // Create a lightweight exercise object so it can be used immediately without API lookup
+    setCurrentExercise({ id: `suggested-${name}`, name, muscleGroup: 'other' });
+    showToast(`${name} selected!`, 'info');
+  };
+
   return (
     <div className="space-y-4">
+
+      {/* Suggested exercises strip (only visible when provided) */}
+      {suggestedExercises && suggestedExercises.length > 0 && (
+        <div className="rounded-2xl border border-indigo-500/20 overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.06))' }}>
+          <div className="px-4 pt-3 pb-2">
+            <p className="text-xs font-black text-indigo-400 uppercase tracking-widest mb-2.5">Suggested for this session</p>
+            <div className="flex flex-wrap gap-2">
+              {suggestedExercises.map(ex => {
+                const done = startedSuggested.has(ex);
+                const active = currentExercise?.name === ex;
+                return (
+                  <button
+                    key={ex}
+                    onClick={() => !done && handlePickSuggested(ex)}
+                    disabled={done}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
+                    style={{
+                      background: active
+                        ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+                        : done
+                          ? 'rgba(99,102,241,0.08)'
+                          : 'rgba(99,102,241,0.14)',
+                      border: active
+                        ? '1px solid rgba(99,102,241,0.6)'
+                        : '1px solid rgba(99,102,241,0.2)',
+                      color: active ? '#fff' : done ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.75)',
+                    }}
+                  >
+                    <span>{done ? '✓' : active ? '▶' : '+'}</span>
+                    {ex}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Exercise Button */}
       <button
@@ -208,29 +256,53 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId }) => {
             )}
           </div>
 
-          <div className="p-5 space-y-4">
-            {/* Reps + Weight */}
+          <div className="p-4 sm:p-5 space-y-4">
+            {/* Reps + Weight — stepper controls for thumb-friendly mobile input */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Reps *</label>
-                <input
-                  type="number"
-                  value={reps}
-                  onChange={(e) => setReps(e.target.value)}
-                  placeholder="12"
-                  className="w-full px-4 py-3 text-base font-semibold bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                />
+                <div className="flex items-center rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 overflow-hidden h-14">
+                  <button
+                    type="button"
+                    onPointerDown={() => setReps(v => String(Math.max(0, (parseInt(v) || 0) - 1)))}
+                    className="w-12 h-full flex items-center justify-center text-xl font-black text-gray-400 dark:text-gray-500 active:bg-gray-200 dark:active:bg-slate-700 transition-colors touch-manipulation flex-shrink-0"
+                  >−</button>
+                  <input
+                    type="number"
+                    value={reps}
+                    onChange={(e) => setReps(e.target.value)}
+                    placeholder="0"
+                    className="flex-1 min-w-0 text-center text-2xl font-black bg-transparent border-0 outline-none text-gray-900 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <button
+                    type="button"
+                    onPointerDown={() => setReps(v => String((parseInt(v) || 0) + 1))}
+                    className="w-12 h-full flex items-center justify-center text-xl font-black text-gray-400 dark:text-gray-500 active:bg-gray-200 dark:active:bg-slate-700 transition-colors touch-manipulation flex-shrink-0"
+                  >+</button>
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Weight (kg)</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                  placeholder="20"
-                  className="w-full px-4 py-3 text-base font-semibold bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                />
+                <div className="flex items-center rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 overflow-hidden h-14">
+                  <button
+                    type="button"
+                    onPointerDown={() => setWeight(v => String(Math.max(0, (parseFloat(v) || 0) - 2.5)))}
+                    className="w-12 h-full flex items-center justify-center text-xl font-black text-gray-400 dark:text-gray-500 active:bg-gray-200 dark:active:bg-slate-700 transition-colors touch-manipulation flex-shrink-0"
+                  >−</button>
+                  <input
+                    type="number"
+                    step="2.5"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    placeholder="0"
+                    className="flex-1 min-w-0 text-center text-2xl font-black bg-transparent border-0 outline-none text-gray-900 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <button
+                    type="button"
+                    onPointerDown={() => setWeight(v => String((parseFloat(v) || 0) + 2.5))}
+                    className="w-12 h-full flex items-center justify-center text-xl font-black text-gray-400 dark:text-gray-500 active:bg-gray-200 dark:active:bg-slate-700 transition-colors touch-manipulation flex-shrink-0"
+                  >+</button>
+                </div>
               </div>
             </div>
 
@@ -255,7 +327,7 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId }) => {
                   <button
                     key={seconds}
                     onClick={() => setRestDuration(seconds)}
-                    className={`py-2.5 rounded-xl text-sm font-bold transition-all ${
+                    className={`py-3 rounded-xl text-sm font-bold transition-all touch-manipulation active:scale-95 ${
                       restDuration === seconds
                         ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20'
                         : 'bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-400 hover:border-blue-300 dark:hover:border-blue-600'
@@ -323,8 +395,8 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId }) => {
                                 className="w-16 px-2 py-1.5 text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
                               />
                               <span className="text-xs text-gray-400">kg</span>
-                              <button onClick={() => handleSaveEdit(globalIndex)} className="ml-auto text-emerald-500 hover:text-emerald-400 font-black text-lg">✓</button>
-                              <button onClick={handleCancelEdit} className="text-gray-400 hover:text-gray-300 font-bold">✕</button>
+                              <button onClick={() => handleSaveEdit(globalIndex)} className="ml-auto p-2 -m-1 text-emerald-500 hover:text-emerald-400 active:text-emerald-300 font-black text-lg touch-manipulation">✓</button>
+                              <button onClick={handleCancelEdit} className="p-2 -m-1 text-gray-400 hover:text-gray-300 active:text-gray-200 font-bold touch-manipulation">✕</button>
                             </div>
                             <input
                               type="text"
@@ -346,12 +418,12 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId }) => {
                                   <span className="font-black text-gray-900 dark:text-white">{set.weight} <span className="font-normal text-gray-400 text-xs">kg</span></span>
                                 )}
                               </div>
-                              <button onClick={() => handleEditSet(globalIndex)} className="text-gray-300 dark:text-gray-600 hover:text-blue-500 transition-colors text-sm">
+                              <button onClick={() => handleEditSet(globalIndex)} className="p-2 -m-1 text-gray-300 dark:text-gray-600 hover:text-blue-500 active:text-blue-400 transition-colors touch-manipulation">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                               </button>
-                              <button onClick={() => handleDeleteSet(globalIndex)} className="text-gray-300 dark:text-gray-600 hover:text-red-500 transition-colors text-sm">
+                              <button onClick={() => handleDeleteSet(globalIndex)} className="p-2 -m-1 text-gray-300 dark:text-gray-600 hover:text-red-500 active:text-red-400 transition-colors touch-manipulation">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>

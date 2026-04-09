@@ -148,7 +148,7 @@ const BodyMeasurementsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6 space-y-5">
+      <div className="max-w-5xl mx-auto px-4 py-5 sm:py-8 sm:px-6 space-y-5">
 
         {/* Add Form — bottom sheet on mobile */}
         {showForm && (

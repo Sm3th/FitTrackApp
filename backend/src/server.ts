@@ -8,6 +8,7 @@ import workoutRoutes from './routes/workout.routes';
 import nutritionRoutes from './routes/nutrition.routes';
 import metricsRoutes from './routes/metrics.routes';
 import usersRoutes from './routes/users.routes';
+import friendsRoutes from './routes/friends.routes';
 import { swaggerSpec } from './swagger';
 
 dotenv.config();
@@ -68,6 +69,7 @@ app.use('/api/workouts', workoutRoutes);
 app.use('/api/nutrition', nutritionRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/friends', friendsRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

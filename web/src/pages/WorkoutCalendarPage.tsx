@@ -144,7 +144,7 @@ const WorkoutCalendarPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 py-5 sm:py-8 sm:px-6 space-y-6">
 
         {/* View Toggle */}
         <div className="flex gap-2">

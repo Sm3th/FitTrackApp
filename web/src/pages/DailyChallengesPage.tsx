@@ -321,7 +321,7 @@ const DailyChallengesPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6">
+      <div className="max-w-4xl mx-auto px-4 py-5 sm:py-8 sm:px-6">
 
         {/* Filter Tabs */}
         <div className="flex gap-2 mb-6">

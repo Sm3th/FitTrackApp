@@ -402,7 +402,7 @@ const NutritionPage: React.FC = () => {
       <Navbar />
 
       {/* Hero */}
-      <div className="relative bg-slate-950 overflow-hidden py-12">
+      <div className="relative bg-slate-950 overflow-hidden py-8 sm:py-12">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/20 to-teal-600/10"/>
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }}/>
@@ -436,7 +436,7 @@ const NutritionPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 sm:py-8 space-y-6">
 
         {/* Date selector */}
         <div className="flex items-center gap-3">

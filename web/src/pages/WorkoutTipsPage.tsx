@@ -114,7 +114,7 @@ const WorkoutTipsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto px-4 py-5 sm:py-8 sm:px-6 lg:px-8">
         {/* Search */}
         <div className="relative mb-5">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>

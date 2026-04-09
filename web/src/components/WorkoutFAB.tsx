@@ -29,7 +29,7 @@ const WorkoutFAB: React.FC = () => {
         <div className="fixed inset-0 z-30 md:hidden" onClick={() => setOpen(false)} />
       )}
 
-      <div className="fixed bottom-24 right-4 z-40 md:hidden flex flex-col items-end gap-2">
+      <div className="fixed bottom-[100px] right-4 z-40 md:hidden flex flex-col items-end gap-2">
         {/* Action buttons */}
         {open && actions.map((action, i) => (
           <div key={action.path}

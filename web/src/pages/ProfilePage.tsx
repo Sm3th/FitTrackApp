@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getLevelFromXP, getTotalXP } from '../utils/xpSystem';
 import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
 import Toast from '../components/Toast';
@@ -137,6 +138,7 @@ const ProfilePage: React.FC = () => {
   const bmi = calculateBMI();
   const bmiCategory = getBMICategory(bmi);
   const initials = (user.fullName || user.username || 'U').slice(0, 2).toUpperCase();
+  const levelInfo = useMemo(() => getLevelFromXP(getTotalXP()), []);
   const goalMeta = onboarding.goal ? GOAL_META[onboarding.goal] : null;
 
   // Weight trend from body measurements
@@ -167,12 +169,34 @@ const ProfilePage: React.FC = () => {
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between gap-5">
             <div className="flex items-center gap-5">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-blue-500/30 flex-shrink-0">
-                {initials}
+              <div className="relative flex-shrink-0">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-blue-500/30">
+                  {initials}
+                </div>
+                {/* Level badge */}
+                <div
+                  className="absolute -bottom-1 -right-1 w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black text-white"
+                  style={{ background: `linear-gradient(135deg, var(--p-from), var(--p-to))`, boxShadow: '0 2px 8px var(--p-shadow)' }}
+                >
+                  {levelInfo.level}
+                </div>
               </div>
               <div>
                 <h1 className="text-3xl font-black text-white tracking-tight">{user.fullName || user.username || 'My Profile'}</h1>
                 <p className="text-white/40 text-sm mt-0.5">{user.email} · @{user.username}</p>
+                {/* XP Progress */}
+                <div className="mt-2 flex items-center gap-2">
+                  <div className="w-32 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.12)' }}>
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: `${levelInfo.progressPct}%`,
+                        background: 'linear-gradient(90deg, var(--p-from), var(--p-to))',
+                      }}
+                    />
+                  </div>
+                  <span className="text-white/35 text-xs font-bold">{levelInfo.title} · {levelInfo.progressPct}% {t('xp.toLevel', { n: levelInfo.level + 1 })}</span>
+                </div>
               </div>
             </div>
             <button onClick={handleLogout}
@@ -186,11 +210,54 @@ const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6">
+      <div className="max-w-4xl mx-auto px-4 py-5 sm:py-8 sm:px-6">
         {pageLoading ? (
           <div className="space-y-6"><CardSkeleton /><CardSkeleton /></div>
         ) : (
           <div className="space-y-6">
+
+            {/* XP Level card */}
+            <div
+              className="rounded-2xl p-5 cursor-pointer transition-all active:scale-[0.99] hover:opacity-90"
+              style={{
+                background: 'linear-gradient(135deg, color-mix(in srgb, var(--p-500) 12%, #0d0f1a), color-mix(in srgb, var(--p-500) 5%, #0d0f1a))',
+                border: '1px solid color-mix(in srgb, var(--p-500) 22%, transparent)',
+              }}
+              onClick={() => navigate('/body-score')}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black text-white"
+                    style={{ background: 'linear-gradient(135deg, var(--p-from), var(--p-to))' }}
+                  >
+                    {levelInfo.level}
+                  </div>
+                  <div>
+                    <div className="font-black text-white text-base leading-none">{levelInfo.title}</div>
+                    <div className="text-white/40 text-xs mt-0.5 font-medium">{t('xp.level', { n: levelInfo.level })} · {levelInfo.currentXP} XP</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-white/60 text-xs font-bold">{t('xp.nextLevel')}</div>
+                  <div className="text-white/35 text-xs">{t('xp.xpAway', { n: levelInfo.xpForNextLevel - levelInfo.currentXP })}</div>
+                </div>
+              </div>
+              <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                <div
+                  className="h-full rounded-full transition-all duration-700 relative overflow-hidden"
+                  style={{
+                    width: `${levelInfo.progressPct}%`,
+                    background: 'linear-gradient(90deg, var(--p-from), var(--p-to))',
+                    boxShadow: '0 0 12px color-mix(in srgb, var(--p-500) 60%, transparent)',
+                  }}
+                />
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-white/30 text-xs font-medium">{levelInfo.progressPct}% {t('xp.toLevel', { n: levelInfo.level + 1 })}</span>
+                <span className="text-xs font-bold" style={{ color: 'var(--p-text)' }}>{t('xp.viewBodyScore')}</span>
+              </div>
+            </div>
 
             {/* Personal Info Card */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">

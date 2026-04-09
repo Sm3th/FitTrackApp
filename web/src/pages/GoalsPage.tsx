@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Navbar from '../components/Navbar';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
@@ -76,6 +77,7 @@ const ProgressRing = React.memo<{ pct: number; size?: number; stroke?: number; c
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const GoalsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { toast, showToast, hideToast } = useToast();
 
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -98,14 +100,14 @@ const GoalsPage: React.FC = () => {
 
   const handleSave = () => {
     if (!form.title || form.targetValue == null || form.currentValue == null) {
-      showToast('Please fill in all required fields', 'warning');
+      showToast(t('goals.fillRequired'), 'warning');
       return;
     }
     if (editingId) {
       const updated = goals.map(g => g.id === editingId ? { ...g, ...form } as Goal : g);
       setGoals(updated);
       saveGoals(updated);
-      showToast('Goal updated', 'success');
+      showToast(t('goals.goalUpdated'), 'success');
     } else {
       const goal: Goal = {
         ...(form as Goal),
@@ -115,7 +117,7 @@ const GoalsPage: React.FC = () => {
       const updated = [...goals, goal];
       setGoals(updated);
       saveGoals(updated);
-      showToast('Goal created! 🎯', 'success');
+      showToast(t('goals.goalCreated'), 'success');
     }
     setShowForm(false);
     setEditingId(null);
@@ -123,18 +125,18 @@ const GoalsPage: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (!window.confirm('Delete this goal?')) return;
+    if (!window.confirm(t('goals.deleteConfirm'))) return;
     const updated = goals.filter(g => g.id !== id);
     setGoals(updated);
     saveGoals(updated);
-    showToast('Goal deleted', 'info');
+    showToast(t('goals.goalDeleted'), 'info' as any);
   };
 
   const handleComplete = (id: string) => {
     const updated = goals.map(g => g.id === id ? { ...g, status: 'completed' as GoalStatus } : g);
     setGoals(updated);
     saveGoals(updated);
-    showToast('Goal completed! 🎉', 'success');
+    showToast(t('goals.goalCompleted'), 'success');
   };
 
   const handleUpdateProgress = (id: string, value: number) => {
@@ -143,8 +145,8 @@ const GoalsPage: React.FC = () => {
     saveGoals(updated);
   };
 
-  const useTemplate = (t: typeof TEMPLATES[0]) => {
-    setForm(prev => ({ ...prev, ...t, currentValue: undefined }));
+  const useTemplate = (tmpl: typeof TEMPLATES[0]) => {
+    setForm(prev => ({ ...prev, ...tmpl, currentValue: undefined }));
   };
 
   const resetForm = () => setForm({
@@ -161,22 +163,22 @@ const GoalsPage: React.FC = () => {
       <Navbar />
 
       {/* Hero */}
-      <div className="relative bg-slate-950 overflow-hidden py-12">
+      <div className="relative bg-slate-950 overflow-hidden py-8 sm:py-12">
         <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 to-purple-600/10" />
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 flex items-center justify-between">
           <div>
-            <p className="text-violet-400 text-sm font-bold uppercase tracking-widest mb-1">Goal Tracker</p>
-            <h1 className="text-4xl font-black text-white tracking-tight mb-1">My Goals</h1>
-            <p className="text-white/40 text-sm">Set targets, track progress, celebrate wins</p>
+            <p className="text-violet-400 text-sm font-bold uppercase tracking-widest mb-1">{t('goals.goalTracker')}</p>
+            <h1 className="text-4xl font-black text-white tracking-tight mb-1">{t('goals.title')}</h1>
+            <p className="text-white/40 text-sm">{t('goals.subtitle')}</p>
           </div>
           <button
             onClick={() => { setEditingId(null); resetForm(); setShowForm(true); }}
             className="text-white font-bold px-5 py-2.5 rounded-xl text-sm flex items-center gap-2"
             style={{ background: 'linear-gradient(135deg, var(--p-from), var(--p-to))' }}
           >
-            <span className="text-lg">+</span> New Goal
+            <span className="text-lg">+</span> {t('goals.newGoal')}
           </button>
         </div>
       </div>
@@ -194,7 +196,7 @@ const GoalsPage: React.FC = () => {
         {/* Active goals */}
         {!pageLoading && activeGoals.length > 0 ? (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Active Goals</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('goals.activeGoals')}</h2>
             {activeGoals.map((goal, idx) => {
               const pct = progressPct(goal.currentValue, goal.targetValue, goal.currentValue);
               const remaining = daysLeft(goal.targetDate);
@@ -221,7 +223,7 @@ const GoalsPage: React.FC = () => {
                             : remaining <= 7 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
                             : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400'
                         }`}>
-                          {isOverdue ? 'Overdue' : `${remaining}d left`}
+                          {isOverdue ? t('goals.overdue') : t('goals.daysLeft', { n: remaining })}
                         </span>
                       </div>
                       {goal.description && (
@@ -254,11 +256,11 @@ const GoalsPage: React.FC = () => {
                         </div>
                         <button onClick={() => handleComplete(goal.id)}
                           className="text-xs font-medium px-3 py-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors">
-                          Mark Done ✓
+                          {t('goals.markDone')}
                         </button>
                         <button onClick={() => handleDelete(goal.id)}
                           className="text-xs font-medium px-3 py-1.5 rounded-lg text-red-500 border border-red-200 dark:border-red-900/40 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ml-auto">
-                          Delete
+                          {t('goals.delete')}
                         </button>
                       </div>
                     </div>
@@ -270,14 +272,14 @@ const GoalsPage: React.FC = () => {
         ) : !pageLoading ? (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🎯</div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No goals yet</h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">Set your first goal to start tracking progress</p>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t('goals.noGoalsTitle')}</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">{t('goals.noGoalsDesc')}</p>
             <button
               onClick={() => { resetForm(); setShowForm(true); }}
               className="text-white font-bold px-6 py-3 rounded-xl"
               style={{ background: 'linear-gradient(135deg, var(--p-from), var(--p-to))' }}
             >
-              Create First Goal
+              {t('goals.createFirst')}
             </button>
           </div>
         ) : null}
@@ -285,16 +287,16 @@ const GoalsPage: React.FC = () => {
         {/* Completed goals */}
         {!pageLoading && completedGoals.length > 0 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Completed 🎉</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('goals.completedGoals')}</h2>
             <div className="space-y-3">
               {completedGoals.map(goal => (
                 <div key={goal.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-4 flex items-center gap-4 opacity-70">
                   <span className="text-2xl">{goal.emoji}</span>
                   <div className="flex-1">
                     <p className="font-semibold text-gray-900 dark:text-white line-through">{goal.title}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{goal.targetValue} {goal.unit} achieved</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('goals.achieved', { n: goal.targetValue, unit: goal.unit })}</p>
                   </div>
-                  <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded-full">Done</span>
+                  <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded-full">{t('goals.done')}</span>
                   <button onClick={() => handleDelete(goal.id)} className="text-gray-400 hover:text-red-500 transition-colors text-sm">✕</button>
                 </div>
               ))}
@@ -308,7 +310,7 @@ const GoalsPage: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
-              <h2 className="font-bold text-gray-900 dark:text-white text-lg">{editingId ? 'Edit Goal' : 'New Goal'}</h2>
+              <h2 className="font-bold text-gray-900 dark:text-white text-lg">{editingId ? t('goals.editGoal') : t('goals.newGoal')}</h2>
               <button onClick={() => { setShowForm(false); setEditingId(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">✕</button>
             </div>
 
@@ -316,12 +318,12 @@ const GoalsPage: React.FC = () => {
               {/* Templates */}
               {!editingId && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Quick Templates</p>
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">{t('goals.quickTemplates')}</p>
                   <div className="flex flex-wrap gap-2">
-                    {TEMPLATES.map(t => (
-                      <button key={t.title} onClick={() => useTemplate(t)}
+                    {TEMPLATES.map(tmpl => (
+                      <button key={tmpl.title} onClick={() => useTemplate(tmpl)}
                         className="text-xs px-3 py-1.5 rounded-full border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
-                        {t.emoji} {t.title}
+                        {tmpl.emoji} {tmpl.title}
                       </button>
                     ))}
                   </div>
@@ -330,14 +332,14 @@ const GoalsPage: React.FC = () => {
 
               {/* Fields */}
               {[
-                { label: 'Goal Title *', key: 'title', type: 'text', placeholder: 'e.g. Reach 70kg' },
-                { label: 'Description', key: 'description', type: 'text', placeholder: 'Optional note...' },
-                { label: 'Emoji', key: 'emoji', type: 'text', placeholder: '🎯' },
-                { label: 'Unit *', key: 'unit', type: 'text', placeholder: 'kg, reps, days...' },
-                { label: 'Target Value *', key: 'targetValue', type: 'number', placeholder: '70' },
-                { label: 'Current Value *', key: 'currentValue', type: 'number', placeholder: '80' },
-                { label: 'Start Date', key: 'startDate', type: 'date' },
-                { label: 'Target Date', key: 'targetDate', type: 'date' },
+                { label: t('goals.goalTitle'), key: 'title', type: 'text', placeholder: 'e.g. Reach 70kg' },
+                { label: t('goals.description'), key: 'description', type: 'text', placeholder: 'Optional note...' },
+                { label: t('goals.emoji'), key: 'emoji', type: 'text', placeholder: '🎯' },
+                { label: t('goals.unit'), key: 'unit', type: 'text', placeholder: 'kg, reps, days...' },
+                { label: t('goals.targetValue'), key: 'targetValue', type: 'number', placeholder: '70' },
+                { label: t('goals.currentValue'), key: 'currentValue', type: 'number', placeholder: '80' },
+                { label: t('goals.startDate'), key: 'startDate', type: 'date' },
+                { label: t('goals.targetDate'), key: 'targetDate', type: 'date' },
               ].map(f => (
                 <div key={f.key}>
                   <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">{f.label}</label>
@@ -349,7 +351,7 @@ const GoalsPage: React.FC = () => {
                       ...prev,
                       [f.key]: f.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value
                     }))}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:border-transparent outline-none transition-all"
                     style={{ '--tw-ring-color': 'var(--p-ring)' } as React.CSSProperties}
                   />
                 </div>
@@ -358,12 +360,12 @@ const GoalsPage: React.FC = () => {
               <div className="flex gap-3 pt-2">
                 <button onClick={() => { setShowForm(false); setEditingId(null); }}
                   className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-400 text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
-                  Cancel
+                  {t('goals.cancel')}
                 </button>
                 <button onClick={handleSave}
                   className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold transition-all hover:opacity-90"
                   style={{ background: 'linear-gradient(135deg, var(--p-from), var(--p-to))' }}>
-                  {editingId ? 'Update' : 'Create Goal'}
+                  {editingId ? t('goals.update') : t('goals.createGoal')}
                 </button>
               </div>
             </div>

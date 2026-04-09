@@ -52,7 +52,7 @@ const WorkoutPlansPage: React.FC = () => {
       <Navbar />
 
       {/* Hero */}
-      <div className="relative bg-slate-950 overflow-hidden py-14">
+      <div className="relative bg-slate-950 overflow-hidden py-10 sm:py-14">
         <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 to-red-600/10" />
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
@@ -78,7 +78,7 @@ const WorkoutPlansPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 py-5 sm:py-8 sm:px-6 lg:px-8">
 
         {/* Search */}
         <div className="relative max-w-md mx-auto mb-5">

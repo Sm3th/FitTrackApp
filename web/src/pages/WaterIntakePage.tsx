@@ -163,7 +163,7 @@ const WaterIntakePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-8 sm:px-6 space-y-5">
+      <div className="max-w-2xl mx-auto px-4 py-5 sm:py-8 sm:px-6 space-y-5">
 
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-3">

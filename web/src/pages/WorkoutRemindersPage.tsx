@@ -130,7 +130,7 @@ const WorkoutRemindersPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-8 sm:px-6 space-y-6">
+      <div className="max-w-2xl mx-auto px-4 py-5 sm:py-8 sm:px-6 space-y-6">
 
         {/* Permission Card */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-6">

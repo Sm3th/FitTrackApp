@@ -47,6 +47,8 @@ const Navbar: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      // Cmd/Ctrl+K → global search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); navigate('/search'); return; }
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       switch (e.key) {
         case '?': setShowShortcuts(s => !s); break;
@@ -76,11 +78,10 @@ const Navbar: React.FC = () => {
 
   const navLinks = [
     { path: '/', label: t('nav.home') },
-    { path: '/workout-plans', label: t('plans.title') },
+    { path: '/explore', label: '⚡ Explore' },
     { path: '/workout', label: t('nav.workout') },
-    { path: '/workout-history', label: t('nav.workoutHistory') },
     { path: '/stats', label: t('nav.stats') },
-    { path: '/achievements', label: t('nav.achievements') },
+    { path: '/nutrition', label: t('nav.nutrition') },
     { path: '/profile', label: t('nav.profile') },
   ];
 
@@ -186,6 +187,17 @@ const Navbar: React.FC = () => {
             <div className="hidden md:flex items-center gap-1.5">
               {isLoggedIn && (
                 <>
+                  {/* Global search */}
+                  <button
+                    onClick={() => navigate('/search')}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all"
+                    title="Search (⌘K)"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
+
                   {/* Shortcut hint */}
                   <button
                     onClick={() => setShowShortcuts(true)}
@@ -354,6 +366,14 @@ const Navbar: React.FC = () => {
             {/* Mobile: if logged in → show dark toggle + avatar (BottomNav handles the rest) */}
             {isLoggedIn ? (
               <div className="md:hidden flex items-center gap-2">
+                <button
+                  onClick={() => navigate('/search')}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
                 <button
                   onClick={toggleTheme}
                   className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-all"

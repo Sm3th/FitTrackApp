@@ -110,7 +110,7 @@ const CalculatorsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-8 sm:px-6">
+      <div className="max-w-3xl mx-auto px-4 py-5 sm:py-8 sm:px-6">
 
         {/* Tab Selector */}
         <div className="flex gap-2 mb-6 bg-white dark:bg-slate-900 rounded-xl p-1.5 shadow">

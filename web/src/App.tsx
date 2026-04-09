@@ -1,12 +1,12 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import BottomNav from './components/BottomNav';
-import WorkoutFAB from './components/WorkoutFAB';
 import InstallPrompt from './components/InstallPrompt';
 import OfflineBanner from './components/OfflineBanner';
 import OnboardingGate from './components/OnboardingGate';
 import PageTransition from './components/PageTransition';
 import { useScrollToTop } from './hooks/useScrollToTop';
+import { useSwipeNav } from './hooks/useSwipeNav';
 import { checkAndFireReminder } from './pages/WorkoutRemindersPage';
 
 // Loading fallback
@@ -49,9 +49,14 @@ const SettingsPage           = lazy(() => import('./pages/SettingsPage'));
 const GoalsPage              = lazy(() => import('./pages/GoalsPage'));
 const FriendsPage            = lazy(() => import('./pages/FriendsPage'));
 const NotFoundPage           = lazy(() => import('./pages/NotFoundPage'));
+const BodyScorePage          = lazy(() => import('./pages/BodyScorePage'));
+const CalibratePage          = lazy(() => import('./pages/CalibratePage'));
+const GlobalSearchPage       = lazy(() => import('./pages/GlobalSearchPage'));
+const ExplorePage            = lazy(() => import('./pages/ExplorePage'));
 
 function AppInner() {
   useScrollToTop();
+  useSwipeNav();
 
   // Poll every 60 s to fire workout reminders if due
   useEffect(() => {
@@ -67,50 +72,51 @@ function App() {
   return (
     <Router>
       <AppInner />
-      {/* Bottom padding on mobile to avoid BottomNav overlap */}
-      <div className="pb-16 md:pb-0">
+      {/* Bottom padding on mobile to clear floating BottomNav */}
+      <div className="pb-24 md:pb-0">
         <Suspense fallback={<PageLoader />}>
           <PageTransition>
           <Routes>
-            <Route path="/"                    element={<HomePage />} />
-            <Route path="/login"               element={<LoginPage />} />
-            <Route path="/register"            element={<RegisterPage />} />
-            <Route path="/workout"             element={<WorkoutPage />} />
-            <Route path="/workout-history"     element={<WorkoutHistoryPage />} />
-            <Route path="/profile"             element={<ProfilePage />} />
-            <Route path="/workout-plans"       element={<WorkoutPlansPage />} />
-            <Route path="/workout-plans/:planId" element={<PlanDetailPage />} />
+            <Route path="/"                       element={<HomePage />} />
+            <Route path="/login"                  element={<LoginPage />} />
+            <Route path="/register"               element={<RegisterPage />} />
+            <Route path="/workout"                element={<WorkoutPage />} />
+            <Route path="/workout-history"        element={<WorkoutHistoryPage />} />
+            <Route path="/profile"                element={<ProfilePage />} />
+            <Route path="/workout-plans"          element={<WorkoutPlansPage />} />
+            <Route path="/workout-plans/:planId"  element={<PlanDetailPage />} />
             <Route path="/guided-workout/:planId" element={<GuidedWorkoutPage />} />
-            <Route path="/stats"              element={<StatsPage />} />
-            <Route path="/progress-photos"    element={<ProgressPhotosPage />} />
-            <Route path="/achievements"       element={<AchievementsPage />} />
-            <Route path="/leaderboard"        element={<LeaderboardPage />} />
-            <Route path="/calendar"           element={<WorkoutCalendarPage />} />
-            <Route path="/measurements"       element={<BodyMeasurementsPage />} />
-            <Route path="/water"              element={<WaterIntakePage />} />
-            <Route path="/templates"          element={<WorkoutTemplatesPage />} />
-            <Route path="/calculators"        element={<CalculatorsPage />} />
-            <Route path="/challenges"         element={<DailyChallengesPage />} />
-            <Route path="/exercise-library"   element={<ExerciseLibraryPage />} />
-            <Route path="/tips"               element={<WorkoutTipsPage />} />
-            <Route path="/reminders"          element={<WorkoutRemindersPage />} />
-            <Route path="/nutrition"          element={<NutritionPage />} />
-            <Route path="/ai-coach"           element={<AICoachPage />} />
-            <Route path="/shared-workout"     element={<SharedWorkoutPage />} />
-            <Route path="/settings"           element={<SettingsPage />} />
-            <Route path="/goals"             element={<GoalsPage />} />
-            <Route path="/friends"           element={<FriendsPage />} />
-            <Route path="*"                   element={<NotFoundPage />} />
+            <Route path="/stats"                  element={<StatsPage />} />
+            <Route path="/progress-photos"        element={<ProgressPhotosPage />} />
+            <Route path="/achievements"           element={<AchievementsPage />} />
+            <Route path="/leaderboard"            element={<LeaderboardPage />} />
+            <Route path="/calendar"               element={<WorkoutCalendarPage />} />
+            <Route path="/measurements"           element={<BodyMeasurementsPage />} />
+            <Route path="/water"                  element={<WaterIntakePage />} />
+            <Route path="/templates"              element={<WorkoutTemplatesPage />} />
+            <Route path="/calculators"            element={<CalculatorsPage />} />
+            <Route path="/challenges"             element={<DailyChallengesPage />} />
+            <Route path="/exercise-library"       element={<ExerciseLibraryPage />} />
+            <Route path="/tips"                   element={<WorkoutTipsPage />} />
+            <Route path="/reminders"              element={<WorkoutRemindersPage />} />
+            <Route path="/nutrition"              element={<NutritionPage />} />
+            <Route path="/ai-coach"               element={<AICoachPage />} />
+            <Route path="/shared-workout"         element={<SharedWorkoutPage />} />
+            <Route path="/settings"               element={<SettingsPage />} />
+            <Route path="/goals"                  element={<GoalsPage />} />
+            <Route path="/friends"                element={<FriendsPage />} />
+            <Route path="/body-score"             element={<BodyScorePage />} />
+            <Route path="/calibrate"              element={<CalibratePage />} />
+            <Route path="/search"                 element={<GlobalSearchPage />} />
+            <Route path="/explore"               element={<ExplorePage />} />
+            <Route path="*"                       element={<NotFoundPage />} />
           </Routes>
           </PageTransition>
         </Suspense>
       </div>
 
-      {/* Mobile bottom navigation — hidden on desktop */}
+      {/* Mobile bottom navigation */}
       <BottomNav />
-
-      {/* Mobile floating action button */}
-      <WorkoutFAB />
 
       {/* Onboarding wizard — shown once after first login */}
       <OnboardingGate />

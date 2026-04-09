@@ -149,7 +149,7 @@ const WorkoutHistoryPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 py-5 sm:py-8 sm:px-6 lg:px-8">
         {loading ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"><ListSkeleton /></div>
         ) : workouts.length === 0 ? (
