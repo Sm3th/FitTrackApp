@@ -65,7 +65,7 @@ export const LoginPage: React.FC = () => {
             </div>
             <div className="text-left">
               <div className="text-xl font-black text-white leading-none tracking-tight">FitTrack</div>
-              <div className="text-[10px] font-bold text-white/30 tracking-widest uppercase">Pro</div>
+              <div className="text-[10px] font-bold text-white/30 tracking-wide uppercase">Pro</div>
             </div>
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight mb-2">{t('auth.welcomeBack')}</h1>
@@ -83,13 +83,13 @@ export const LoginPage: React.FC = () => {
           }}>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">{t('auth.email')}</label>
+              <label className="block text-xs font-bold text-white/50 uppercase tracking-wide mb-2">{t('auth.email')}</label>
               <input type="email" name="email" value={formData.email} onChange={handleChange}
                 placeholder="your@email.com" required
                 className="input-dark w-full px-4 py-3.5 rounded-xl transition-all" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">{t('auth.password')}</label>
+              <label className="block text-xs font-bold text-white/50 uppercase tracking-wide mb-2">{t('auth.password')}</label>
               <input type="password" name="password" value={formData.password} onChange={handleChange}
                 placeholder="••••••••" required
                 className="input-dark w-full px-4 py-3.5 rounded-xl transition-all" />

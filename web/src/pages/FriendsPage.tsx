@@ -30,6 +30,12 @@ interface Stats {
   followers: number;
 }
 
+interface PREntry {
+  exerciseName: string;
+  maxWeight: number;
+  reps: number;
+}
+
 const timeAgo = (iso: string): string => {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
@@ -55,6 +61,10 @@ const FriendsPage: React.FC = () => {
   const [toggling, setToggling] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [comparingUser, setComparingUser] = useState<FriendUser | null>(null);
+  const [myPRs, setMyPRs] = useState<PREntry[]>([]);
+  const [friendPRs, setFriendPRs] = useState<PREntry[]>([]);
+  const [loadingPRs, setLoadingPRs] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem('token')) { navigate('/login'); return; }
@@ -119,6 +129,23 @@ const FriendsPage: React.FC = () => {
     } catch { /* ignore */ }
   }, []);
 
+  const openCompare = useCallback(async (user: FriendUser) => {
+    setComparingUser(user);
+    setLoadingPRs(true);
+    setMyPRs([]);
+    setFriendPRs([]);
+    try {
+      const [myRes, friendRes] = await Promise.all([
+        apiClient.get('/friends/prs/me'),
+        apiClient.get(`/friends/prs/${user.userId}`),
+      ]);
+      setMyPRs(myRes.data.data || []);
+      setFriendPRs(friendRes.data.data || []);
+    } catch { /* ignore */ } finally {
+      setLoadingPRs(false);
+    }
+  }, []);
+
   const toggleFollow = useCallback(async (userId: string, currentlyFollowing: boolean) => {
     if (toggling.has(userId)) return;
     setToggling(prev => new Set(prev).add(userId));
@@ -145,46 +172,58 @@ const FriendsPage: React.FC = () => {
     }
   }, [toggling]);
 
-  const UserCard: React.FC<{ user: FriendUser }> = ({ user }) => {
+  const UserCard: React.FC<{ user: FriendUser; showCompare?: boolean }> = ({ user, showCompare }) => {
     const busy = toggling.has(user.userId);
     return (
-      <div className="flex items-center gap-4 surface-elevated rounded-2xl px-5 py-4">
-        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-lg flex-shrink-0">
-          {(user.fullName || user.username).charAt(0).toUpperCase()}
-        </div>
+      <div className="surface-elevated rounded-2xl px-5 py-4">
+        <div className="flex items-center gap-4">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-lg flex-shrink-0">
+            {(user.fullName || user.username).charAt(0).toUpperCase()}
+          </div>
 
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-gray-900 dark:text-white text-sm truncate">
-            {user.fullName || user.username}
-          </p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 truncate">@{user.username}</p>
-          <div className="flex gap-3 mt-1">
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              <span className="font-bold text-gray-700 dark:text-gray-300">{user.workouts}</span> {t('friends.workouts')}
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              <span className="font-bold text-gray-700 dark:text-gray-300">{(user.totalVolume / 1000).toFixed(1)}t</span> {t('friends.lifted')}
-            </span>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-gray-900 dark:text-white text-sm truncate">
+              {user.fullName || user.username}
+            </p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 truncate">@{user.username}</p>
+            <div className="flex gap-3 mt-1">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="font-bold text-gray-700 dark:text-gray-300">{user.workouts}</span> {t('friends.workouts')}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="font-bold text-gray-700 dark:text-gray-300">{(user.totalVolume / 1000).toFixed(1)}t</span> {t('friends.lifted')}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5 flex-shrink-0">
+            <button
+              disabled={busy}
+              onClick={() => toggleFollow(user.userId, user.isFollowing)}
+              className={`text-xs font-bold px-4 py-2 rounded-xl transition-all active:scale-95 disabled:opacity-60 ${
+                user.isFollowing
+                  ? 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-500'
+                  : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md shadow-blue-500/20 hover:opacity-90'
+              }`}
+            >
+              {busy ? '…' : user.isFollowing ? t('friends.followingBtn') : t('friends.follow')}
+            </button>
+            {showCompare && (
+              <button
+                onClick={() => openCompare(user)}
+                className="text-xs font-bold px-4 py-1.5 rounded-xl bg-purple-100 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 hover:opacity-80 active:scale-95 transition-all"
+              >
+                Compare PRs
+              </button>
+            )}
           </div>
         </div>
-
-        <button
-          disabled={busy}
-          onClick={() => toggleFollow(user.userId, user.isFollowing)}
-          className={`flex-shrink-0 text-xs font-bold px-4 py-2 rounded-xl transition-all active:scale-95 disabled:opacity-60 ${
-            user.isFollowing
-              ? 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-500'
-              : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md shadow-blue-500/20 hover:opacity-90'
-          }`}
-        >
-          {busy ? '…' : user.isFollowing ? t('friends.followingBtn') : t('friends.follow')}
-        </button>
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Hero */}
@@ -193,7 +232,7 @@ const FriendsPage: React.FC = () => {
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6">
-          <p className="text-blue-400 text-sm font-bold uppercase tracking-widest mb-1">{t('friends.community')}</p>
+          <p className="text-blue-400 text-sm font-bold uppercase tracking-wide mb-1">{t('friends.community')}</p>
           <h1 className="text-4xl font-black text-white tracking-tight mb-1">{t('friends.title')}</h1>
           <p className="text-white/40 text-sm">{t('friends.subtitle')}</p>
 
@@ -286,7 +325,7 @@ const FriendsPage: React.FC = () => {
                 </button>
               </div>
             ) : (
-              followingUsers.map(user => <UserCard key={user.userId} user={user} />)
+              followingUsers.map(user => <UserCard key={user.userId} user={user} showCompare />)
             )}
           </div>
         )}
@@ -324,7 +363,7 @@ const FriendsPage: React.FC = () => {
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{item.title}</span>
                     </div>
                     <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{item.detail}</p>
-                    <p className="text-xs text-gray-300 dark:text-gray-600 mt-1">{timeAgo(item.timestamp)}</p>
+                    <p className="text-xs text-gray-300 dark:text-gray-400 mt-1">{timeAgo(item.timestamp)}</p>
                   </div>
                 </div>
               ))
@@ -332,6 +371,131 @@ const FriendsPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* PR Comparison Modal */}
+      {comparingUser && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+          onClick={() => setComparingUser(null)}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-h-[85vh] overflow-hidden flex flex-col"
+            onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-800">
+              <div>
+                <h3 className="font-black text-gray-900 dark:text-white text-lg">PR Comparison</h3>
+                <p className="text-sm text-gray-400 dark:text-gray-500">
+                  You vs {comparingUser.fullName || comparingUser.username}
+                </p>
+              </div>
+              <button onClick={() => setComparingUser(null)}
+                className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                ✕
+              </button>
+            </div>
+
+            {/* Stats summary */}
+            <div className="grid grid-cols-2 gap-3 px-6 py-4 bg-gray-50 dark:bg-slate-800/50">
+              {[
+                { label: 'Workouts', mine: myPRs.length > 0 ? '—' : '—', theirs: '—' },
+              ].length > 0 && (
+                <div className="col-span-2 grid grid-cols-2 gap-3">
+                  <div className="text-center">
+                    <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">You</p>
+                    <div className="surface-elevated rounded-2xl p-3">
+                      <p className="text-2xl font-black" style={{ color: 'var(--p-500)' }}>{myPRs.length}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">exercises tracked</p>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">
+                      {comparingUser.fullName || comparingUser.username}
+                    </p>
+                    <div className="surface-elevated rounded-2xl p-3">
+                      <p className="text-2xl font-black text-purple-500">{friendPRs.length}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">exercises tracked</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* PR list */}
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+              {loadingPRs ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
+                    style={{ borderColor: 'var(--p-500)', borderTopColor: 'transparent' }} />
+                </div>
+              ) : (() => {
+                const allExercises = Array.from(new Set([
+                  ...myPRs.map(p => p.exerciseName),
+                  ...friendPRs.map(p => p.exerciseName),
+                ])).slice(0, 15);
+
+                if (allExercises.length === 0) {
+                  return (
+                    <div className="text-center py-8">
+                      <p className="text-4xl mb-2">🏋️</p>
+                      <p className="font-bold text-gray-500 dark:text-gray-400">No PRs found yet</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Complete workouts to see PR comparisons</p>
+                    </div>
+                  );
+                }
+
+                return allExercises.map(name => {
+                  const mine = myPRs.find(p => p.exerciseName === name);
+                  const theirs = friendPRs.find(p => p.exerciseName === name);
+                  const myW = mine?.maxWeight ?? 0;
+                  const theirW = theirs?.maxWeight ?? 0;
+                  const total = Math.max(myW + theirW, 1);
+                  const myPct = Math.round((myW / total) * 100);
+                  const iWin = myW >= theirW;
+
+                  return (
+                    <div key={name} className="surface-elevated rounded-2xl p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-bold text-gray-900 dark:text-white truncate flex-1 mr-2">{name}</p>
+                        {iWin && myW > 0 && theirW > 0 && (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-950/40 text-green-600 dark:text-green-400">You win</span>
+                        )}
+                        {!iWin && myW > 0 && theirW > 0 && (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400">They win</span>
+                        )}
+                      </div>
+
+                      {/* Progress bars */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400 dark:text-gray-500 w-6">Me</span>
+                          <div className="flex-1 h-2 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full transition-all"
+                              style={{ width: `${myW > 0 ? Math.max(myPct, 8) : 0}%`, background: 'var(--p-500)' }} />
+                          </div>
+                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300 w-16 text-right">
+                            {myW > 0 ? `${myW} kg` : '—'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400 dark:text-gray-500 w-6">
+                            {(comparingUser.fullName || comparingUser.username).charAt(0)}
+                          </span>
+                          <div className="flex-1 h-2 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full bg-purple-500 transition-all"
+                              style={{ width: `${theirW > 0 ? Math.max(100 - myPct, 8) : 0}%` }} />
+                          </div>
+                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300 w-16 text-right">
+                            {theirW > 0 ? `${theirW} kg` : '—'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -163,10 +163,16 @@ interface DailyGoals {
 const DEFAULT_GOALS: DailyGoals = { calories: 2000, protein: 150, carbs: 250, fat: 65 };
 const MEAL_ICONS  = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍎' };
 const MEAL_COLORS = {
-  breakfast: 'from-amber-500 to-orange-500',
-  lunch:     'from-emerald-500 to-teal-500',
-  dinner:    'from-blue-500 to-indigo-500',
-  snack:     'from-pink-500 to-rose-500',
+  breakfast: 'from-amber-500/[0.12] to-orange-500/[0.12]',
+  lunch:     'from-emerald-500/[0.12] to-teal-500/[0.12]',
+  dinner:    'from-blue-500/[0.12] to-indigo-500/[0.12]',
+  snack:     'from-pink-500/[0.12] to-rose-500/[0.12]',
+};
+const MEAL_TEXT = {
+  breakfast: 'text-amber-700 dark:text-amber-300',
+  lunch:     'text-emerald-700 dark:text-emerald-300',
+  dinner:    'text-blue-700 dark:text-blue-300',
+  snack:     'text-pink-700 dark:text-pink-300',
 };
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -191,18 +197,19 @@ const MacroRing: React.FC<{ value: number; goal: number; color: string; label: s
     <div className="flex flex-col items-center gap-1.5">
       <div className="relative w-20 h-20">
         <svg className="-rotate-90" width="80" height="80">
-          <circle cx="40" cy="40" r={r} stroke="rgba(255,255,255,0.08)" strokeWidth="8" fill="none"/>
+          <circle cx="40" cy="40" r={r} stroke="currentColor" strokeWidth="8" fill="none"
+            className="text-gray-100 dark:text-white/[0.08]"/>
           <circle cx="40" cy="40" r={r} stroke={color} strokeWidth="8" fill="none"
             strokeDasharray={c} strokeDashoffset={c * (1 - pct)} strokeLinecap="round"
             className="transition-all duration-700"/>
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-sm font-black text-white leading-none">{value}</span>
-          <span className="text-[9px] text-slate-500 uppercase">{unit}</span>
+          <span className="text-sm font-black text-gray-900 dark:text-white leading-none">{value}</span>
+          <span className="text-[9px] text-gray-400 dark:text-slate-500 uppercase">{unit}</span>
         </div>
       </div>
-      <span className="text-xs font-semibold text-slate-400">{label}</span>
-      <span className="text-[10px] text-slate-600">/{goal}{unit}</span>
+      <span className="text-xs font-semibold text-gray-500 dark:text-slate-400">{label}</span>
+      <span className="text-[10px] text-gray-400 dark:text-slate-400">/{goal}{unit}</span>
     </div>
   );
 };
@@ -238,7 +245,7 @@ const FoodEntryRow = React.memo<{ entry: FoodEntry; onDelete: () => void }>(({ e
           <p className="text-xs text-gray-400">kcal</p>
         </div>
         <button onClick={onDelete}
-          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all">
+          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all">
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
           </svg>
@@ -346,7 +353,23 @@ const NutritionPage: React.FC = () => {
 
   useEffect(() => {
     if (!localStorage.getItem('token')) { navigate('/login'); return; }
+    // Load from localStorage immediately for instant render
     setEntries(loadEntries(date));
+    // Then hydrate from API and update cache
+    apiClient.get(`/nutrition?date=${date}`).then(res => {
+      const items: FoodEntry[] = ((res.data?.data || res.data) || []).map((r: any) => ({
+        id: String(r.id),
+        name: r.foodName || r.name,
+        calories: r.calories || 0,
+        protein: r.protein || 0,
+        carbs: r.carbs || 0,
+        fat: r.fats ?? r.fat ?? 0,
+        meal: (r.mealType || r.meal || 'snack') as FoodEntry['meal'],
+        time: r.date || new Date().toISOString(),
+      }));
+      setEntries(items);
+      saveEntries(date, items);
+    }).catch(() => { /* keep localStorage data */ });
   }, [date, navigate]);
 
   const totals = entries.reduce(
@@ -371,15 +394,31 @@ const NutritionPage: React.FC = () => {
     saveEntries(date, next);
     setForm({ name: '', calories: '', protein: '', carbs: '', fat: '', meal: form.meal });
     setShowAdd(false);
-    // Sync to backend (fire-and-forget)
-    apiClient.post('/nutrition', { ...entry, date }).catch(() => {});
+    // Sync to backend with correct field names
+    apiClient.post('/nutrition', {
+      foodName: entry.name,
+      mealType: entry.meal,
+      calories: entry.calories,
+      protein: entry.protein,
+      carbs: entry.carbs,
+      fats: entry.fat,
+      date,
+    }).then(res => {
+      // Update local entry id with server id
+      const serverId = String(res.data?.data?.id || res.data?.id || entry.id);
+      setEntries(prev => {
+        const updated = prev.map(e => e.id === entry.id ? { ...e, id: serverId } : e);
+        saveEntries(date, updated);
+        return updated;
+      });
+    }).catch(() => {});
   };
 
   const handleDelete = (id: string) => {
     const next = entries.filter(e => e.id !== id);
     setEntries(next);
     saveEntries(date, next);
-    // Sync to backend (fire-and-forget)
+    // Sync to backend
     apiClient.delete(`/nutrition/${id}`).catch(() => {});
   };
 
@@ -398,7 +437,7 @@ const NutritionPage: React.FC = () => {
   const isToday = date === todayKey();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Hero */}
@@ -408,7 +447,7 @@ const NutritionPage: React.FC = () => {
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }}/>
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <p className="text-emerald-400 text-sm font-bold uppercase tracking-widest mb-1">{t('nutrition.daily') || 'Daily Nutrition'}</p>
+            <p className="text-emerald-400 text-sm font-bold uppercase tracking-wide mb-1">{t('nutrition.daily') || 'Daily Nutrition'}</p>
             <h1 className="text-4xl font-black text-white tracking-tight mb-1">{t('nutrition.title')}</h1>
             <p className="text-white/40 text-sm">{t('nutrition.subtitle')}</p>
           </div>
@@ -456,19 +495,19 @@ const NutritionPage: React.FC = () => {
         </div>
 
         {/* Summary card */}
-        <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6 shadow-sm">
+        <div className="list-card p-5 sm:p-6">
           {/* Calorie bar */}
           <div className="mb-6">
             <div className="flex items-end justify-between mb-2">
               <div>
-                <span className="text-4xl font-black text-white">{totals.calories.toLocaleString()}</span>
-                <span className="text-slate-500 text-sm ml-1">/ {goals.calories.toLocaleString()} kcal</span>
+                <span className="text-4xl font-black text-gray-900 dark:text-white">{totals.calories.toLocaleString()}</span>
+                <span className="text-gray-400 dark:text-slate-500 text-sm ml-1">/ {goals.calories.toLocaleString()} kcal</span>
               </div>
-              <div className={`text-sm font-bold px-3 py-1 rounded-full ${caloriesLeft >= 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
+              <div className={`text-sm font-bold px-3 py-1 rounded-full ${caloriesLeft >= 0 ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400'}`}>
                 {caloriesLeft >= 0 ? t('nutrition.caloriesLeft', { n: caloriesLeft }) : t('nutrition.caloriesOver', { n: Math.abs(caloriesLeft) })}
               </div>
             </div>
-            <div className="h-3 bg-white/5 rounded-full overflow-hidden">
+            <div className="h-3 bg-gray-100 dark:bg-white/[0.05] rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-700 ${totals.calories > goals.calories ? 'bg-gradient-to-r from-orange-500 to-red-500' : 'bg-gradient-to-r from-emerald-500 to-teal-400'}`}
                 style={{ width: `${Math.min((totals.calories / goals.calories) * 100, 100)}%` }}
@@ -500,13 +539,13 @@ const NutritionPage: React.FC = () => {
             {byMeal.map(({ meal, items }) => {
               const mealCals = items.reduce((s, e) => s + e.calories, 0);
               return (
-                <div key={meal} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
-                  <div className={`flex items-center justify-between px-5 py-3.5 bg-gradient-to-r ${MEAL_COLORS[meal]} bg-opacity-10`}>
+                <div key={meal} className="list-card overflow-hidden">
+                  <div className={`flex items-center justify-between px-5 py-3.5 bg-gradient-to-r ${MEAL_COLORS[meal]}`}>
                     <div className="flex items-center gap-2">
                       <span className="text-lg">{MEAL_ICONS[meal]}</span>
-                      <span className="font-black text-white text-sm">{MEAL_LABELS[meal]}</span>
+                      <span className={`font-bold text-sm ${MEAL_TEXT[meal]}`}>{MEAL_LABELS[meal]}</span>
                     </div>
-                    <span className="text-white/70 text-xs font-semibold">{mealCals} kcal</span>
+                    <span className={`text-xs font-semibold ${MEAL_TEXT[meal]} opacity-70`}>{mealCals} kcal</span>
                   </div>
                   <div className="divide-y divide-gray-50 dark:divide-slate-800">
                     {items.map(entry => (

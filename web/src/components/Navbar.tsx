@@ -78,7 +78,7 @@ const Navbar: React.FC = () => {
 
   const navLinks = [
     { path: '/', label: t('nav.home') },
-    { path: '/explore', label: '⚡ Explore' },
+    { path: '/explore', label: 'Explore' },
     { path: '/workout', label: t('nav.workout') },
     { path: '/stats', label: t('nav.stats') },
     { path: '/nutrition', label: t('nav.nutrition') },
@@ -131,20 +131,17 @@ const Navbar: React.FC = () => {
               onClick={() => handleNavigation('/')}
               className="flex items-center gap-2.5 group shrink-0"
             >
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
+              <div className="w-8 h-8 rounded-[10px] flex items-center justify-center transition-transform duration-200 group-active:scale-95"
                 style={{
                   background: 'linear-gradient(135deg, var(--p-from), var(--p-to))',
-                  boxShadow: '0 4px 16px var(--p-shadow), 0 1px 0 rgba(255,255,255,0.2) inset',
                 }}>
-                <span className="text-white text-base font-black tracking-tighter">F</span>
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
+                </svg>
               </div>
-              <div className="flex flex-col leading-none">
-                <span className="text-base font-black tracking-tight"
-                  style={{ backgroundImage: 'linear-gradient(135deg, var(--p-from), var(--p-to))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                  FitTrack
-                </span>
-                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 tracking-widest uppercase -mt-0.5">Pro</span>
-              </div>
+              <span className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-white">
+                FitTrack
+              </span>
             </button>
 
             {/* Desktop Nav */}
@@ -238,7 +235,7 @@ const Navbar: React.FC = () => {
                     {settingsOpen && (
                       <div className="absolute right-0 top-11 w-80 rounded-2xl z-50 animate-slide-down overflow-hidden surface-dropdown">
                         <div className="p-5">
-                          <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">{t('settings.appearance')}</p>
+                          <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-4">{t('settings.appearance')}</p>
 
                           <div className="flex justify-between items-center mb-4">
                             <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t('settings.darkMode')}</span>
@@ -316,7 +313,7 @@ const Navbar: React.FC = () => {
                           </div>
 
                           <div className="border-t border-gray-100 dark:border-slate-700 pt-4">
-                            <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">{t('settings.quickLinks')}</p>
+                            <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">{t('settings.quickLinks')}</p>
                             <div className="grid grid-cols-2 gap-1">
                               {moreLinks.map(link => (
                                 <button key={link.path} onClick={() => { navigate(link.path); setSettingsOpen(false); }}

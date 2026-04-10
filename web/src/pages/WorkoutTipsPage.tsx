@@ -99,16 +99,16 @@ const WorkoutTipsPage: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Header */}
-      <div className="relative bg-slate-950 overflow-hidden py-12">
+      <div className="relative bg-slate-950 overflow-hidden py-8 sm:py-12">
         <div className="absolute inset-0 bg-gradient-to-br from-pink-600/20 to-rose-600/10" />
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-pink-400 text-sm font-semibold uppercase tracking-widest mb-2">{t('tips.knowledge')}</p>
+          <p className="text-pink-400 text-sm font-semibold uppercase tracking-wide mb-2">{t('tips.knowledge')}</p>
           <h1 className="text-4xl font-black text-white tracking-tight mb-1">{t('tips.title')}</h1>
           <p className="text-white/40 text-sm">{t('tips.subtitle')}</p>
         </div>
@@ -167,7 +167,7 @@ const WorkoutTipsPage: React.FC = () => {
             {filtered.map(tip => (
               <div
                 key={tip.id}
-                className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden"
+                className="list-card overflow-hidden"
               >
                 <button
                   onClick={() => setExpandedId(expandedId === tip.id ? null : tip.id)}

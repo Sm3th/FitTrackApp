@@ -1,9 +1,65 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
 import { generateAIReport, type AIReport, type WorkoutEntry } from '../utils/aiRecommendations';
+
+// ── Quick Q&A engine (rule-based) ─────────────────────────────────────────────
+const FAQ_PAIRS: Array<{ patterns: RegExp[]; answer: (report: AIReport) => string }> = [
+  {
+    patterns: [/rest|recovery|sleep|rest day/i],
+    answer: r => r.recommendations.find(rec => rec.category === 'recovery')?.reason ||
+      'Aim for 7-9 hours of sleep and at least 1-2 rest days per week. Your muscles grow during recovery, not during training.',
+  },
+  {
+    patterns: [/protein|nutrition|diet|eat|food|calories/i],
+    answer: () => 'For muscle gain, target 1.6–2.2g of protein per kg of bodyweight daily. Prioritise whole foods: chicken, fish, eggs, legumes, and Greek yoghurt. Log your meals in the Nutrition section to track progress.',
+  },
+  {
+    patterns: [/progress|plateau|stuck|stagnant/i],
+    answer: r => r.recommendations.find(rec => rec.category === 'progression')?.reason ||
+      'Try progressive overload: increase weight by 2.5–5kg or add 1-2 reps each week. Also consider deload weeks every 4-6 weeks.',
+  },
+  {
+    patterns: [/score|fitness score|how.*doing/i],
+    answer: r => `Your current fitness score is ${r.score}/100 (${r.scoreLabel}). ${r.score < 60 ? 'Keep building consistency — you\'re on the right track!' : r.score < 80 ? 'You\'re doing great! Focus on recovery and progressive overload.' : 'Elite level! Keep up the amazing work.'}`,
+  },
+  {
+    patterns: [/muscle|build|bulk|gain/i],
+    answer: () => 'For muscle growth, focus on compound movements (bench press, squat, deadlift, rows), progressive overload, and sufficient protein intake (1.8-2.2g/kg). Ensure you\'re in a slight calorie surplus.',
+  },
+  {
+    patterns: [/fat.*loss|weight.*loss|lose weight|cut/i],
+    answer: () => 'For fat loss, create a moderate calorie deficit (300-500 kcal/day), maintain protein intake, continue resistance training to preserve muscle, and add 150-200 min of cardio per week.',
+  },
+  {
+    patterns: [/plan|workout.*plan|schedule|program/i],
+    answer: r => `Your AI-generated weekly plan: ${r.weeklyPlan.map(d => `${d.day}: ${d.type}`).join(', ')}. Check the Weekly Plan section above for details.`,
+  },
+  {
+    patterns: [/warm.*up|cooldown|stretch/i],
+    answer: () => 'Always warm up for 5-10 minutes before lifting (light cardio + dynamic stretching). Cool down with 5-10 min of static stretching. This improves performance and reduces injury risk.',
+  },
+  {
+    patterns: [/motivation|motivat/i],
+    answer: () => 'Motivation fades — discipline and habits keep you going. Set small weekly goals, track your progress, celebrate wins, and find a workout partner or community for accountability.',
+  },
+];
+
+const getAIAnswer = (question: string, report: AIReport): string => {
+  for (const pair of FAQ_PAIRS) {
+    if (pair.patterns.some(p => p.test(question))) {
+      return pair.answer(report);
+    }
+  }
+  return `Great question! Based on your ${report.score}/100 fitness score, keep focusing on ${report.recommendations[0]?.category || 'consistency'} this week. Check the recommendations above for personalised advice, or try asking about: rest/recovery, nutrition, progress, muscle gain, or fat loss.`;
+};
+
+interface ChatMessage {
+  role: 'user' | 'coach';
+  text: string;
+}
 
 const INTENSITY_STYLES = {
   rest:     'bg-slate-100 dark:bg-slate-800 text-slate-400',
@@ -31,6 +87,27 @@ const AICoachPage: React.FC = () => {
   const { t } = useTranslation();
   const [report, setReport] = useState<AIReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    { role: 'coach', text: 'Hi! I\'m your AI Coach. Ask me anything about training, nutrition, recovery, or how to improve your fitness score. 💪' },
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const handleSendMessage = () => {
+    const q = chatInput.trim();
+    if (!q || !report) return;
+    setChatInput('');
+    setChatMessages(prev => [...prev, { role: 'user', text: q }]);
+    setIsTyping(true);
+    // Simulate AI thinking delay
+    setTimeout(() => {
+      const answer = getAIAnswer(q, report);
+      setChatMessages(prev => [...prev, { role: 'coach', text: answer }]);
+      setIsTyping(false);
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+    }, 600 + Math.random() * 400);
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -50,7 +127,7 @@ const AICoachPage: React.FC = () => {
   }, [navigate]);
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
@@ -68,16 +145,16 @@ const AICoachPage: React.FC = () => {
     score >= 55 ? 'from-amber-500 to-orange-500' : 'from-red-500 to-rose-500';
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Hero */}
-      <div className="relative bg-slate-950 overflow-hidden py-12">
+      <div className="relative bg-slate-950 overflow-hidden py-8 sm:py-12">
         <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 to-red-600/10" />
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6">
-          <p className="text-orange-400 text-sm font-semibold uppercase tracking-widest mb-2">{t('aiCoach.badge')}</p>
+          <p className="text-orange-400 text-sm font-semibold uppercase tracking-wide mb-2">{t('aiCoach.badge')}</p>
           <h1 className="text-4xl font-black text-white tracking-tight mb-1">{t('aiCoach.title')}</h1>
           <p className="text-white/40 text-sm">{t('aiCoach.subtitle')}</p>
         </div>
@@ -86,7 +163,7 @@ const AICoachPage: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 py-5 sm:py-8 sm:px-6 space-y-6">
 
         {/* Fitness Score Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="list-card overflow-hidden">
           <div className={`bg-gradient-to-r ${scoreBg} p-6 text-white`}>
             <div className="flex items-center justify-between">
               <div>
@@ -139,7 +216,7 @@ const AICoachPage: React.FC = () => {
             <span className="ml-2 text-sm font-normal text-gray-400">({recommendations.length})</span>
           </h2>
           {recommendations.length === 0 ? (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-10 text-center">
+            <div className="list-card p-10 text-center">
               <div className="text-5xl mb-3">🏆</div>
               <p className="font-black text-gray-800 dark:text-white text-lg">{t('aiCoach.perfectBalance')}</p>
               <p className="text-gray-500 mt-1 text-sm">{t('aiCoach.noIssues')}</p>
@@ -180,7 +257,7 @@ const AICoachPage: React.FC = () => {
             {weeklyPlan.map((day, i) => (
               <div key={i}
                 className={`rounded-xl p-3 text-center ${INTENSITY_STYLES[day.intensity]}`}>
-                <p className="text-xs font-black uppercase tracking-wide mb-1 opacity-60">{day.day}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide mb-1 opacity-60">{day.day}</p>
                 <p className="text-xl mb-1">{day.emoji}</p>
                 <p className="text-xs font-black leading-tight mb-1">{day.type}</p>
                 <p className="text-[10px] opacity-60 leading-tight">{day.focus}</p>
@@ -192,9 +269,64 @@ const AICoachPage: React.FC = () => {
           </p>
         </div>
 
+        {/* AI Chat */}
+        <div className="list-card overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-sm">🤖</div>
+            <div>
+              <h2 className="font-black text-gray-900 dark:text-white text-sm">Chat with AI Coach</h2>
+              <p className="text-xs text-gray-400">Ask about training, nutrition, or recovery</p>
+            </div>
+          </div>
+          <div className="h-64 overflow-y-auto p-4 space-y-3">
+            {chatMessages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                {msg.role === 'coach' && (
+                  <span className="w-6 h-6 rounded-full bg-orange-500/20 flex items-center justify-center text-xs mr-2 shrink-0 mt-0.5">🤖</span>
+                )}
+                <div className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                  msg.role === 'user'
+                    ? 'bg-orange-500 text-white rounded-br-sm'
+                    : 'bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-200 rounded-bl-sm'
+                }`}>
+                  {msg.text}
+                </div>
+              </div>
+            ))}
+            {isTyping && (
+              <div className="flex justify-start">
+                <span className="w-6 h-6 rounded-full bg-orange-500/20 flex items-center justify-center text-xs mr-2 shrink-0">🤖</span>
+                <div className="bg-gray-100 dark:bg-slate-800 px-4 py-3 rounded-2xl rounded-bl-sm flex gap-1 items-center">
+                  {[0, 1, 2].map(i => (
+                    <span key={i} className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce"
+                      style={{ animationDelay: `${i * 0.15}s` }} />
+                  ))}
+                </div>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+          <div className="px-4 py-3 border-t border-gray-100 dark:border-slate-800 flex gap-2">
+            <input
+              type="text"
+              value={chatInput}
+              onChange={e => setChatInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
+              placeholder="Ask about training, nutrition..."
+              className="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={!chatInput.trim() || isTyping}
+              className="px-4 py-2 bg-orange-500 hover:bg-orange-400 disabled:opacity-40 text-white font-bold rounded-xl transition-all active:scale-95 text-sm">
+              Send
+            </button>
+          </div>
+        </div>
+
         {/* Empty state CTA */}
         {recommendations.length === 0 && insights.length === 0 && (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-8 text-center">
+          <div className="list-card p-8 text-center">
             <div className="text-5xl mb-3">📊</div>
             <p className="font-black text-gray-800 dark:text-white">{t('aiCoach.startLogging')}</p>
             <p className="text-gray-500 mt-1 text-sm mb-4">{t('aiCoach.noWorkoutsDesc')}</p>

@@ -74,7 +74,7 @@ const PlanDetailPage: React.FC = () => {
 
   if (!plan) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+      <div className="min-h-screen">
         <Navbar />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
@@ -86,7 +86,7 @@ const PlanDetailPage: React.FC = () => {
   const hasGuide = (ex: WorkoutPlanExercise) => !!getExerciseGuideByName(ex.exerciseName);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Hero */}
@@ -137,7 +137,7 @@ const PlanDetailPage: React.FC = () => {
           </div>
 
           <button onClick={handleStartWorkout}
-            className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-black px-10 py-4 rounded-2xl text-lg shadow-2xl shadow-orange-500/30 hover:shadow-orange-500/50 transition-all active:scale-95">
+            className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-black px-10 py-4 rounded-2xl text-lg shadow-md transition-all active:scale-95">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -150,7 +150,7 @@ const PlanDetailPage: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 py-5 sm:py-8 sm:px-6 lg:px-8 space-y-6">
 
         {/* Target Muscles */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
+        <div className="list-card p-6">
           <h2 className="text-lg font-black text-gray-900 dark:text-white mb-4">{t('planDetail.targetMuscles')}</h2>
           <div className="flex flex-wrap gap-2">
             {plan.targetMuscles.map((muscle, i) => (
@@ -162,7 +162,7 @@ const PlanDetailPage: React.FC = () => {
         </div>
 
         {/* Exercise List */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="list-card overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
             <h2 className="text-lg font-black text-gray-900 dark:text-white">
               {t('planDetail.exerciseList')}
@@ -216,7 +216,7 @@ const PlanDetailPage: React.FC = () => {
                       </div>
                     )}
                     {hasDemo && (
-                      <svg className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-gray-300 dark:text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>
                       </svg>
                     )}
@@ -250,7 +250,7 @@ const PlanDetailPage: React.FC = () => {
 
         {/* Bottom CTA */}
         <button onClick={handleStartWorkout}
-          className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-black py-5 rounded-2xl text-lg shadow-xl shadow-orange-500/20 transition-all active:scale-95">
+          className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-black py-5 rounded-2xl text-lg shadow-md transition-all active:scale-95">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>

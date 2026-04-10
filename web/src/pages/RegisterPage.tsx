@@ -72,7 +72,7 @@ export const RegisterPage: React.FC = () => {
             </div>
             <div className="text-left">
               <div className="text-xl font-black text-white leading-none tracking-tight">FitTrack</div>
-              <div className="text-[10px] font-bold text-white/30 tracking-widest uppercase">Pro</div>
+              <div className="text-[10px] font-bold text-white/30 tracking-wide uppercase">Pro</div>
             </div>
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight mb-2">{t('auth.createAccount')}</h1>
@@ -97,7 +97,7 @@ export const RegisterPage: React.FC = () => {
               { id: 'confirmPassword', label: t('auth.confirmPassword'), type: 'password', placeholder: '••••••••', required: true },
             ].map(field => (
               <div key={field.id}>
-                <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">{field.label}</label>
+                <label className="block text-xs font-bold text-white/50 uppercase tracking-wide mb-2">{field.label}</label>
                 <input type={field.type} name={field.id}
                   value={formData[field.id as keyof typeof formData]}
                   onChange={handleChange} placeholder={field.placeholder} required={field.required}

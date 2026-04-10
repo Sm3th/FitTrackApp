@@ -89,6 +89,7 @@ router.get('/sessions/:id', async (req: AuthRequest, res: Response) => {
 router.patch('/sessions/:id/end', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const { rating, ratingNote } = req.body;
     const session = await db.getWorkoutSession(id);
 
     if (!session) {
@@ -107,6 +108,12 @@ router.patch('/sessions/:id/end', async (req: AuthRequest, res: Response) => {
     }
 
     const updatedSession = await db.endWorkoutSession(id);
+
+    // Save rating in notes field as JSON (augments existing notes)
+    if (rating != null) {
+      const meta = JSON.stringify({ rating: Number(rating), ratingNote: ratingNote || '' });
+      await db.updateWorkoutSession(id, { notes: meta });
+    }
 
     return res.json({
       success: true,

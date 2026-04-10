@@ -195,7 +195,7 @@ const WorkoutSummaryModal: React.FC<WorkoutSummaryModalProps> = ({
                 opacity: mounted ? 1 : 0,
                 transition: 'opacity 0.4s ease 0.5s',
               }}>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Exercises</p>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Exercises</p>
               <div className="flex flex-wrap gap-2">
                 {exercises.map((ex, i) => (
                   <span key={ex}
@@ -213,20 +213,37 @@ const WorkoutSummaryModal: React.FC<WorkoutSummaryModalProps> = ({
           )}
 
           {/* Actions */}
-          <div className="px-6 pb-8 flex gap-3"
+          <div className="px-6 pb-8 space-y-2.5"
             style={{
               opacity: mounted ? 1 : 0,
               transform: mounted ? 'translateY(0)' : 'translateY(10px)',
               transition: 'opacity 0.35s ease 0.6s, transform 0.35s ease 0.6s',
             }}>
-            <button onClick={onClose}
-              className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 text-white font-bold py-3.5 rounded-2xl transition-all active:scale-95">
-              Done
-            </button>
-            <button onClick={() => { onClose(); window.location.href = '/workout-history'; }}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black py-3.5 rounded-2xl shadow-lg shadow-blue-500/20 transition-all active:scale-95">
-              View History →
-            </button>
+            {'share' in navigator && (
+              <button
+                onClick={() => {
+                  navigator.share({
+                    title: 'FitTrack Pro — Workout Complete!',
+                    text: `Just crushed a workout! 🏆\n${workoutName}\n⏱ ${fmtDuration(durationSeconds)} | 🎯 ${totalSets} sets | 💪 ${exercises.length} exercises${totalVolume > 0 ? ` | 📊 ${totalVolume.toLocaleString()} kg` : ''}\n\n#FitTrackPro #Fitness`,
+                  }).catch(() => {});
+                }}
+                className="w-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 font-bold py-3 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                </svg>
+                Share Workout
+              </button>
+            )}
+            <div className="flex gap-3">
+              <button onClick={onClose}
+                className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 text-white font-bold py-3.5 rounded-2xl transition-all active:scale-95">
+                Done
+              </button>
+              <button onClick={() => { onClose(); window.location.href = '/workout-history'; }}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black py-3.5 rounded-2xl shadow-lg shadow-blue-500/20 transition-all active:scale-95">
+                View History →
+              </button>
+            </div>
           </div>
         </div>
       </div>

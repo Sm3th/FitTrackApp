@@ -200,6 +200,32 @@ export function appendWorkoutSets(sets: WorkoutSet[]): void {
   localStorage.setItem('workout_sets_history', JSON.stringify(combined));
 }
 
+// Calculate overall body score for a specific date window
+export function getOverallScoreForPeriod(
+  allSets: WorkoutSet[],
+  periodStart: Date,
+  periodEnd: Date,
+  targetSetsPerMuscle = 12,
+): number {
+  const inPeriod = allSets.filter(s => {
+    if (!s.timestamp) return false;
+    const d = new Date(s.timestamp);
+    return d >= periodStart && d < periodEnd;
+  });
+
+  const counts: Record<MuscleGroup, number> = {
+    chest: 0, back: 0, shoulders: 0, biceps: 0,
+    triceps: 0, legs: 0, core: 0, cardio: 0,
+  };
+  inPeriod.forEach(s => { counts[detectMuscleGroup(s.exerciseName)]++; });
+
+  let total = 0;
+  MUSCLE_GROUPS.forEach(m => {
+    total += Math.min(Math.round((counts[m] / targetSetsPerMuscle) * 100), 100);
+  });
+  return Math.round(total / MUSCLE_GROUPS.length);
+}
+
 // Get sets per muscle group for the past 7 days
 export function getWeeklyMuscleActivity(): Record<MuscleGroup, number> {
   const sets = loadWorkoutSetsFromHistory();

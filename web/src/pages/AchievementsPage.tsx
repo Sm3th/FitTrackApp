@@ -71,7 +71,7 @@ const AchievementsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+      <div className="min-h-screen">
         <Navbar />
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="h-8 bg-gray-200 dark:bg-slate-800 rounded w-48 mb-6 animate-pulse" />
@@ -82,7 +82,7 @@ const AchievementsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <ConfettiBurst active={confetti} count={90} />
       <Navbar />
 
@@ -92,7 +92,7 @@ const AchievementsPage: React.FC = () => {
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-amber-400 text-sm font-semibold uppercase tracking-widest mb-2">Milestones</p>
+          <p className="text-amber-400 text-sm font-semibold uppercase tracking-wide mb-2">Milestones</p>
           <h1 className="text-4xl font-black text-white tracking-tight mb-3">{t('achievements.title')}</h1>
           <div className="text-white/40 text-sm mb-6">{t('achievements.subtitle')}</div>
 
@@ -136,7 +136,7 @@ const AchievementsPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {recentlyUnlocked.map(achievement => (
                 <div key={achievement.id}
-                  className={`bg-gradient-to-br ${achievement.color} rounded-2xl p-6 text-white shadow-xl hover:scale-[1.02] transition-transform`}>
+                  className={`bg-gradient-to-br ${achievement.color} rounded-2xl p-6 text-white shadow-md active:scale-[0.98] transition-transform`}>
                   <div className="text-5xl mb-3">{achievement.icon}</div>
                   <h3 className="text-lg font-black mb-1">{achievement.name}</h3>
                   <p className="text-sm text-white/80">{achievement.description}</p>
@@ -148,7 +148,7 @@ const AchievementsPage: React.FC = () => {
 
         {/* Next Goal */}
         {nextAchievement && (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
+          <div className="list-card p-6">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>🎯</span> {t('achievements.nextGoal')}
             </h2>
@@ -181,8 +181,8 @@ const AchievementsPage: React.FC = () => {
                 <div key={achievement.id}
                   className={`rounded-2xl p-6 border transition-all duration-300 animate-fade-up ${
                     achievement.unlocked
-                      ? `bg-gradient-to-br ${achievement.color} text-white shadow-lg border-transparent hover:scale-[1.02]`
-                      : 'bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800 text-gray-400 dark:text-gray-500'
+                      ? `bg-gradient-to-br ${achievement.color} text-white shadow-md border-transparent active:scale-[0.98]`
+                      : 'list-card border-transparent text-gray-400 dark:text-gray-500'
                   }`}
                   style={{ animationDelay: `${(catIdx * 3 + idx) * 60}ms`, animationFillMode: 'both' }}>
                   <div className={`text-5xl mb-3 ${achievement.unlocked ? 'opacity-100' : 'opacity-30'}`}>

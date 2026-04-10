@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Navbar from '../components/Navbar';
 import EmptyState from '../components/EmptyState';
+import apiClient from '../services/api';
 
 interface ProgressPhoto {
   id: string;
@@ -12,6 +13,10 @@ interface ProgressPhoto {
   notes?: string;
 }
 
+const STORAGE_KEY = 'progressPhotos';
+const loadLocal = (): ProgressPhoto[] => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; } };
+const saveLocal = (p: ProgressPhoto[]) => localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+
 const ProgressPhotosPage: React.FC = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
@@ -19,6 +24,7 @@ const ProgressPhotosPage: React.FC = () => {
   const [photos, setPhotos] = useState<ProgressPhoto[]>([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [newPhoto, setNewPhoto] = useState({
     weight: '',
     notes: '',
@@ -27,67 +33,76 @@ const ProgressPhotosPage: React.FC = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-    loadPhotos();
+    if (!token) { navigate('/login'); return; }
+    // Show localStorage immediately
+    setPhotos(loadLocal());
+    // Hydrate full images from localStorage (API doesn't return imageData in list)
   }, [navigate]);
-
-  const loadPhotos = () => {
-    // Load from localStorage
-    const saved = localStorage.getItem('progressPhotos');
-    if (saved) {
-      setPhotos(JSON.parse(saved));
-    }
-  };
-
-  const savePhotos = (updatedPhotos: ProgressPhoto[]) => {
-    localStorage.setItem('progressPhotos', JSON.stringify(updatedPhotos));
-    setPhotos(updatedPhotos);
-  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewPhoto({
-          ...newPhoto,
-          imagePreview: reader.result as string,
-        });
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+    // Compress to max 800px wide before reading as base64
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX = 800;
+      const scale = img.width > MAX ? MAX / img.width : 1;
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      URL.revokeObjectURL(url);
+      setNewPhoto(p => ({ ...p, imagePreview: dataUrl }));
+    };
+    img.src = url;
   };
 
-  const handleUpload = () => {
-    if (!newPhoto.imagePreview) {
-      alert('Please select a photo');
-      return;
-    }
-
-    const photo: ProgressPhoto = {
-      id: Date.now().toString(),
+  const handleUpload = useCallback(async () => {
+    if (!newPhoto.imagePreview) { alert('Please select a photo'); return; }
+    setUploading(true);
+    const optimistic: ProgressPhoto = {
+      id: `tmp_${Date.now()}`,
       date: new Date().toISOString(),
       imageUrl: newPhoto.imagePreview,
       weight: newPhoto.weight ? parseFloat(newPhoto.weight) : undefined,
       notes: newPhoto.notes || undefined,
     };
-
-    const updatedPhotos = [photo, ...photos];
-    savePhotos(updatedPhotos);
-
+    const updated = [optimistic, ...photos];
+    setPhotos(updated);
+    saveLocal(updated);
     setNewPhoto({ weight: '', notes: '', imagePreview: null });
     setShowUploadModal(false);
-  };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm(t('photos.deleteConfirm'))) {
-      const updatedPhotos = photos.filter(p => p.id !== id);
-      savePhotos(updatedPhotos);
+    // Sync to backend
+    try {
+      const res = await apiClient.post('/photos', {
+        imageData: optimistic.imageUrl,
+        weight: optimistic.weight,
+        notes: optimistic.notes,
+        date: optimistic.date,
+      });
+      const serverId: string = res.data?.data?.id || res.data?.id;
+      if (serverId) {
+        setPhotos(prev => {
+          const next = prev.map(p => p.id === optimistic.id ? { ...p, id: serverId } : p);
+          saveLocal(next);
+          return next;
+        });
+      }
+    } catch { /* keep local version */ } finally { setUploading(false); }
+  }, [newPhoto, photos]);
+
+  const handleDelete = useCallback(async (id: string) => {
+    if (!window.confirm(t('photos.deleteConfirm', 'Delete this photo?'))) return;
+    const updated = photos.filter(p => p.id !== id);
+    setPhotos(updated);
+    saveLocal(updated);
+    if (!id.startsWith('tmp_')) {
+      apiClient.delete(`/photos/${id}`).catch(() => {});
     }
-  };
+  }, [photos, t]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -101,18 +116,18 @@ const ProgressPhotosPage: React.FC = () => {
   const comparePhotos = photos.length >= 2 ? [photos[0], photos[photos.length - 1]] : null;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Header */}
-      <div className="relative bg-slate-950 overflow-hidden py-12">
+      <div className="relative bg-slate-950 overflow-hidden py-8 sm:py-12">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/10" />
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
-              <p className="text-purple-400 text-sm font-semibold uppercase tracking-widest mb-2">{t('photos.transformation')}</p>
+              <p className="text-purple-400 text-sm font-semibold uppercase tracking-wide mb-2">{t('photos.transformation')}</p>
               <h1 className="text-4xl font-black text-white tracking-tight mb-1">{t('photos.title')}</h1>
               <p className="text-white/40 text-sm">{t('photos.subtitle')}</p>
             </div>
@@ -127,7 +142,7 @@ const ProgressPhotosPage: React.FC = () => {
         
         {/* Before/After Comparison */}
         {comparePhotos && (
-          <div className="mb-8 bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8">
+          <div className="mb-8 list-card p-8">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">
               {t('photos.yourTransformation')}
             </h2>
@@ -192,7 +207,7 @@ const ProgressPhotosPage: React.FC = () => {
         )}
 
         {/* Photo Gallery */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8">
+        <div className="list-card p-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
             {t('photos.timeline')}
           </h2>
@@ -326,10 +341,10 @@ const ProgressPhotosPage: React.FC = () => {
               </button>
               <button
                 onClick={handleUpload}
-                disabled={!newPhoto.imagePreview}
+                disabled={!newPhoto.imagePreview || uploading}
                 className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {t('photos.upload')}
+                {uploading ? '...' : t('photos.upload')}
               </button>
             </div>
           </div>

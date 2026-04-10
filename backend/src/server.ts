@@ -9,7 +9,10 @@ import nutritionRoutes from './routes/nutrition.routes';
 import metricsRoutes from './routes/metrics.routes';
 import usersRoutes from './routes/users.routes';
 import friendsRoutes from './routes/friends.routes';
+import goalsRoutes from './routes/goals.routes';
+import photosRoutes from './routes/photos.routes';
 import { swaggerSpec } from './swagger';
+import { authLimiter, apiLimiter } from './middleware/rateLimit.middleware';
 
 dotenv.config();
 
@@ -63,13 +66,16 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api', apiLimiter);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/workouts', workoutRoutes);
 app.use('/api/nutrition', nutritionRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/friends', friendsRoutes);
+app.use('/api/goals', goalsRoutes);
+app.use('/api/photos', photosRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

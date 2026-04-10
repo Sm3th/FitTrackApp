@@ -161,6 +161,43 @@ router.get('/stats', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// ── GET /api/friends/prs/:userId ─────────────────────────
+// Returns top weight PR per exercise for a given user
+router.get('/prs/:userId', async (req: AuthRequest, res: Response) => {
+  try {
+    const me = req.user!.id;
+    const targetId = req.params.userId === 'me' ? me : req.params.userId;
+
+    const rows = await prisma.$queryRaw<any[]>`
+      SELECT
+        e.name                   AS exerciseName,
+        MAX(es.weight)           AS maxWeight,
+        es.reps                  AS reps
+      FROM "ExerciseSet" es
+      JOIN "Exercise" e           ON e.id = es."exerciseId"
+      JOIN "WorkoutSession" ws    ON ws.id = es."workoutSessionId"
+      WHERE ws."userId" = ${targetId}
+        AND ws."endTime" IS NOT NULL
+        AND es.weight IS NOT NULL
+        AND es.weight > 0
+      GROUP BY e.name
+      ORDER BY maxWeight DESC
+      LIMIT 20
+    `;
+
+    const data = rows.map(r => ({
+      exerciseName: r.exerciseName,
+      maxWeight: Number(r.maxWeight),
+      reps: Number(r.reps),
+    }));
+
+    return res.json({ success: true, data });
+  } catch (err) {
+    console.error('PRs error:', err);
+    return res.status(500).json({ success: false, error: 'Failed to fetch PRs' });
+  }
+});
+
 // ── GET /api/friends/feed ─────────────────────────────────
 // Recent workouts of people I follow (last 30 days)
 router.get('/feed', async (req: AuthRequest, res: Response) => {

@@ -1,9 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from 'recharts';
 import Navbar from '../components/Navbar';
 import BodyScoreMap from '../components/BodyScoreMap';
-import { MuscleGroup, MUSCLE_EMOJI, calculateBodyScores, loadWorkoutSetsFromHistory } from '../utils/bodyScore';
+import { MuscleGroup, MUSCLE_EMOJI, calculateBodyScores, loadWorkoutSetsFromHistory, getOverallScoreForPeriod } from '../utils/bodyScore';
 
 const MUSCLE_EXERCISES: Record<MuscleGroup, string[]> = {
   chest: ['Bench Press', 'Incline Bench Press', 'Push-Up', 'Cable Fly', 'Dumbbell Fly', 'Chest Press'],
@@ -29,6 +32,21 @@ const BodyScorePage: React.FC = () => {
 
   const workoutSets = useMemo(() => loadWorkoutSetsFromHistory(), []);
   const bodyScores = useMemo(() => calculateBodyScores(workoutSets), [workoutSets]);
+
+  // Trend: overall score per week for the last 5 weeks
+  const trendData = useMemo(() => {
+    const weeks: { label: string; score: number }[] = [];
+    for (let i = 4; i >= 0; i--) {
+      const end = new Date();
+      end.setDate(end.getDate() - i * 7);
+      end.setHours(0, 0, 0, 0);
+      const start = new Date(end);
+      start.setDate(start.getDate() - 7);
+      const label = i === 0 ? 'This wk' : `${i}w ago`;
+      weeks.push({ label, score: getOverallScoreForPeriod(workoutSets, start, end) });
+    }
+    return weeks;
+  }, [workoutSets]);
 
   const weakestMuscle = useMemo(() => {
     let worst: MuscleGroup = 'core';
@@ -72,7 +90,7 @@ const BodyScorePage: React.FC = () => {
   const gradeTip = (grade: string) => t(`bodyScore.tip_${grade}` as any, '');
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Hero */}
@@ -100,7 +118,7 @@ const BodyScorePage: React.FC = () => {
             </div>
             <div className="ml-auto text-center">
               <div className="text-4xl font-black text-white leading-none">{bodyScores.overallScore}</div>
-              <div className="text-white/35 text-xs font-bold uppercase tracking-widest mt-0.5">{t('bodyScore.overall')}</div>
+              <div className="text-white/35 text-xs font-bold uppercase tracking-wide mt-0.5">{t('bodyScore.overall')}</div>
             </div>
           </div>
 
@@ -118,6 +136,40 @@ const BodyScorePage: React.FC = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-5 sm:py-8 sm:px-6 space-y-6">
+
+        {/* 5-week trend chart */}
+        {trendData.some(d => d.score > 0) && (
+          <div className="surface-form rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-black text-gray-900 dark:text-white text-base">Score Trend</h2>
+              <span className="text-xs text-gray-400 dark:text-white/35 font-medium">Last 5 weeks</span>
+            </div>
+            <ResponsiveContainer width="100%" height={120}>
+              <LineChart data={trendData} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,128,0.12)" />
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'rgba(128,128,128,0.7)' }} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: 'rgba(128,128,128,0.7)' }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ background: '#1e2130', border: 'none', borderRadius: 10, fontSize: 12 }}
+                  labelStyle={{ color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}
+                  itemStyle={{ color: '#fff', fontWeight: 700 }}
+                  formatter={(v: number) => [`${v}%`, 'Score']}
+                />
+                <Line
+                  type="monotone" dataKey="score" stroke="url(#scoreGrad)" strokeWidth={2.5}
+                  dot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: '#818cf8' }}
+                />
+                <defs>
+                  <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="var(--p-from)" />
+                    <stop offset="100%" stopColor="var(--p-to)" />
+                  </linearGradient>
+                </defs>
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
         {/* Weakest alert */}
         {bodyScores.scores[weakestMuscle].totalSets === 0 && (
@@ -208,7 +260,7 @@ const BodyScorePage: React.FC = () => {
             {/* Suggested exercises — selectable */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-black text-white/40 uppercase tracking-widest">{t('bodyScore.suggestedExercises')}</p>
+                <p className="text-xs font-black text-white/40 uppercase tracking-wide">{t('bodyScore.suggestedExercises')}</p>
                 {selectedExercises.size > 0 && (
                   <button onClick={() => setSelectedExercises(new Set())}
                     className="text-xs text-white/30 hover:text-white/60 transition-colors">

@@ -48,7 +48,7 @@ const WorkoutPlansPage: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Hero */}
@@ -57,7 +57,7 @@ const WorkoutPlansPage: React.FC = () => {
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-orange-400 text-sm font-semibold uppercase tracking-widest mb-2">Get Moving</p>
+          <p className="text-orange-400 text-sm font-semibold uppercase tracking-wide mb-2">Get Moving</p>
           <h1 className="text-5xl font-black text-white tracking-tight mb-3">{t('plans.title')}</h1>
           <p className="text-white/40 text-base max-w-xl mx-auto mb-6">
             {WORKOUT_PLANS.length} {t('plans.subtitle')}
@@ -140,7 +140,7 @@ const WorkoutPlansPage: React.FC = () => {
             {filteredPlans.map(plan => (
               <div key={plan.id}
                 onClick={() => navigate(`/workout-plans/${plan.id}`)}
-                className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden group">
+                className="list-card hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer overflow-hidden group">
 
                 {/* Colored top strip */}
                 <div className={`h-1.5 bg-gradient-to-r ${plan.color}`} />

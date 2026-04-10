@@ -218,7 +218,7 @@ const GuidedWorkoutPage: React.FC = () => {
             </button>
 
             <div className="text-center">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{plan.name}</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{plan.name}</p>
               <p className="text-sm font-black text-white">
                 {currentExerciseIndex + 1} <span className="text-slate-500 font-normal">{t('guided.ofExercises')}</span> {plan.exercises.length}
               </p>
@@ -249,7 +249,7 @@ const GuidedWorkoutPage: React.FC = () => {
           {/* Phase badge */}
           <div className="text-center mb-4">
             <div className={`inline-flex items-center gap-2 bg-gradient-to-r ${config.color} rounded-full px-5 py-1.5 shadow-lg`}>
-              <span className="text-xs font-black tracking-widest">{config.label}</span>
+              <span className="text-xs font-black tracking-wide">{config.label}</span>
             </div>
             <p className="text-slate-500 text-xs mt-1.5">{config.sublabel}</p>
           </div>
@@ -293,7 +293,7 @@ const GuidedWorkoutPage: React.FC = () => {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-7xl font-black tabular-nums">{timeLeft}</span>
-                <span className="text-xs text-slate-500 uppercase tracking-widest mt-1">{t('guided.seconds') || 'seconds'}</span>
+                <span className="text-xs text-slate-500 uppercase tracking-wide mt-1">{t('guided.seconds') || 'seconds'}</span>
               </div>
             </div>
 

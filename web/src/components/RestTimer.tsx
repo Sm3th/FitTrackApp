@@ -85,7 +85,7 @@ const RestTimer: React.FC<RestTimerProps> = ({ duration, onComplete, onSkip }) =
         <div className="text-center mb-5">
           <div className="inline-flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-full px-4 py-1.5 mb-2">
             <span className={`w-2 h-2 rounded-full ${isUrgent ? 'bg-orange-400 animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
-            <span className="text-xs font-black text-slate-300 uppercase tracking-widest">
+            <span className="text-xs font-black text-slate-300 uppercase tracking-wide">
               {isDone ? 'Done!' : 'Rest Time'}
             </span>
           </div>
@@ -126,7 +126,7 @@ const RestTimer: React.FC<RestTimerProps> = ({ duration, onComplete, onSkip }) =
               } ${isUrgent ? 'animate-pulse' : ''}`}>
               {timeLeft}
             </span>
-            <span className="text-xs text-slate-500 uppercase tracking-widest mt-1">seconds</span>
+            <span className="text-xs text-slate-500 uppercase tracking-wide mt-1">seconds</span>
           </div>
         </div>
 

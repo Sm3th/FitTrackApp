@@ -87,7 +87,7 @@ const XPResultScreen: React.FC<Props> = ({ xpGain, newLevelInfo, leveledUp, onCl
           {/* XP Earned header */}
           <div className="text-center mb-6">
             <div
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest mb-4"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wide mb-4"
               style={{
                 background: 'color-mix(in srgb, var(--p-500) 15%, transparent)',
                 border: '1px solid color-mix(in srgb, var(--p-500) 25%, transparent)',
@@ -103,7 +103,7 @@ const XPResultScreen: React.FC<Props> = ({ xpGain, newLevelInfo, leveledUp, onCl
             >
               +{xpCounter}
             </div>
-            <div className="text-white/40 text-sm font-bold uppercase tracking-widest">{t('xp.xpEarned')}</div>
+            <div className="text-white/40 text-sm font-bold uppercase tracking-wide">{t('xp.xpEarned')}</div>
           </div>
 
           {/* XP Breakdown */}

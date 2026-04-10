@@ -102,7 +102,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
           {/* Step 1 — Goal */}
           {step === 1 && (
             <div>
-              <p className="text-blue-400 text-sm font-bold uppercase tracking-widest mb-2">Step 1</p>
+              <p className="text-blue-400 text-sm font-bold uppercase tracking-wide mb-2">Step 1</p>
               <h1 className="text-3xl font-black text-white mb-2 leading-tight">What's your primary goal?</h1>
               <p className="text-slate-400 text-sm mb-8">We'll personalize your workout plans and recommendations.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -134,7 +134,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
           {/* Step 2 — Experience Level */}
           {step === 2 && (
             <div>
-              <p className="text-indigo-400 text-sm font-bold uppercase tracking-widest mb-2">Step 2</p>
+              <p className="text-indigo-400 text-sm font-bold uppercase tracking-wide mb-2">Step 2</p>
               <h1 className="text-3xl font-black text-white mb-2 leading-tight">What's your fitness level?</h1>
               <p className="text-slate-400 text-sm mb-8">This helps us suggest the right workout intensity.</p>
               <div className="space-y-3">
@@ -166,7 +166,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
           {/* Step 3 — Training Days & Calories */}
           {step === 3 && (
             <div>
-              <p className="text-violet-400 text-sm font-bold uppercase tracking-widest mb-2">Step 3</p>
+              <p className="text-violet-400 text-sm font-bold uppercase tracking-wide mb-2">Step 3</p>
               <h1 className="text-3xl font-black text-white mb-2 leading-tight">Set your weekly targets</h1>
               <p className="text-slate-400 text-sm mb-8">How often do you plan to train, and what's your calorie goal?</p>
 

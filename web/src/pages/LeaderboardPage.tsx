@@ -68,7 +68,7 @@ const LeaderboardPage: React.FC = () => {
   const currentUserWorkouts = currentUserEntry?.workouts ?? 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Header */}
@@ -77,7 +77,7 @@ const LeaderboardPage: React.FC = () => {
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-amber-400 text-sm font-semibold uppercase tracking-widest mb-2">{t('leaderboard.competition')}</p>
+          <p className="text-amber-400 text-sm font-semibold uppercase tracking-wide mb-2">{t('leaderboard.competition')}</p>
           <h1 className="text-5xl font-black text-white tracking-tight mb-3">{t('leaderboard.title')}</h1>
           <p className="text-white/40">{t('leaderboard.subtitle')}</p>
         </div>
@@ -98,7 +98,7 @@ const LeaderboardPage: React.FC = () => {
         <div className="max-w-3xl mx-auto px-4 py-5 sm:py-8 sm:px-6 space-y-6">
 
           {/* Tabs */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-1.5 flex gap-1.5">
+          <div className="list-card p-1.5 flex gap-1.5">
             {([
               { key: 'workouts',  icon: '💪', grad: 'from-blue-500 to-indigo-500' },
               { key: 'volume',    icon: '🏋️', grad: 'from-violet-500 to-purple-500' },
@@ -118,7 +118,7 @@ const LeaderboardPage: React.FC = () => {
 
           {/* Your Rank card */}
           {currentUserEntry && (
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-5 shadow-xl shadow-blue-500/20">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-5 shadow-md">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center text-white font-black text-2xl">
@@ -145,7 +145,7 @@ const LeaderboardPage: React.FC = () => {
 
           {/* Podium — top 3 */}
           {!loading && sortedLeaderboard.length >= 3 && (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
+            <div className="list-card p-6">
               <h2 className="font-bold text-gray-900 dark:text-white mb-6 text-center">{t('leaderboard.podium')}</h2>
               <div className="flex items-end justify-center gap-3">
                 {/* 2nd */}
@@ -182,7 +182,7 @@ const LeaderboardPage: React.FC = () => {
           )}
 
           {/* Full list */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div className="list-card overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-800">
               <h2 className="font-bold text-gray-900 dark:text-white">{t('leaderboard.fullRankings')}</h2>
             </div>

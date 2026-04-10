@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
@@ -47,6 +47,8 @@ const WorkoutHistoryPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<SortBy>('newest');
   const [ratings, setRatings] = useState<Record<string, WorkoutRating>>({});
   const [copied, setCopied] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(20);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!localStorage.getItem('token')) { navigate('/login'); return; }
@@ -58,7 +60,19 @@ const WorkoutHistoryPage: React.FC = () => {
     try {
       setLoading(true);
       const { data } = await apiClient.get('/workouts/sessions');
-      setWorkouts(data.data || []);
+      const sessions = data.data || [];
+      setWorkouts(sessions);
+      // Merge ratings stored in session notes (backend) with localStorage ratings
+      const localRatings: Record<string, WorkoutRating> = JSON.parse(localStorage.getItem('workoutRatings') || '{}');
+      sessions.forEach((s: any) => {
+        if (s.notes && !localRatings[s.id]) {
+          try {
+            const meta = JSON.parse(s.notes);
+            if (meta.rating) localRatings[s.id] = { rating: meta.rating, note: meta.ratingNote || '' };
+          } catch {}
+        }
+      });
+      setRatings(localRatings);
     } catch { /* ignore */ } finally { setLoading(false); }
   };
 
@@ -90,6 +104,20 @@ const WorkoutHistoryPage: React.FC = () => {
       }),
     [workouts, debouncedSearch, sortBy]
   );
+
+  // Reset visible count when filter/sort changes
+  useEffect(() => { setVisibleCount(20); }, [debouncedSearch, sortBy]);
+
+  // Infinite scroll sentinel
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) setVisibleCount(c => c + 20);
+    }, { rootMargin: '100px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [filtered.length]);
 
   const generateShareLink = useCallback((workout: WorkoutSession) => {
     const userRaw = localStorage.getItem('user');
@@ -125,12 +153,12 @@ const WorkoutHistoryPage: React.FC = () => {
   const totalVolume = selectedWorkout?.exerciseSets?.reduce((s, e) => s + (e.reps||0)*(e.weight||0), 0) || 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
       <PullToRefresh pullY={pullY} refreshing={refreshing} />
 
       {/* Hero */}
-      <div className="relative bg-slate-950 overflow-hidden py-12">
+      <div className="relative bg-slate-950 overflow-hidden py-8 sm:py-12">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-blue-600/10" />
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
@@ -194,7 +222,7 @@ const WorkoutHistoryPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-2.5">
-                  {filtered.map(workout => (
+                  {filtered.slice(0, visibleCount).map(workout => (
                     <button key={workout.id} onClick={() => setSelectedWorkout(workout)}
                       className={`w-full text-left bg-white dark:bg-slate-900 rounded-2xl p-4 border-2 transition-all duration-200 hover:shadow-md group ${
                         selectedWorkout?.id === workout.id
@@ -233,6 +261,11 @@ const WorkoutHistoryPage: React.FC = () => {
                       )}
                     </button>
                   ))}
+                  {visibleCount < filtered.length && (
+                    <div ref={sentinelRef} className="py-4 flex justify-center">
+                      <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--p-500)', borderTopColor: 'transparent' }} />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -240,7 +273,7 @@ const WorkoutHistoryPage: React.FC = () => {
             {/* Right: Detail */}
             <div>
               {selectedWorkout ? (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm sticky top-20 overflow-hidden animate-fade-up">
+                <div className="list-card sticky top-20 overflow-hidden animate-fade-up">
                   {/* Detail header */}
                   <div className="px-6 py-5 border-b border-gray-100 dark:border-slate-800 flex items-start justify-between">
                     <div>
@@ -290,7 +323,7 @@ const WorkoutHistoryPage: React.FC = () => {
 
                     {selectedWorkout.exerciseSets && selectedWorkout.exerciseSets.length > 0 ? (
                       <div>
-                        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">{t('history.exercises')}</p>
+                        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">{t('history.exercises')}</p>
                         <div className="space-y-4">
                           {Object.entries(groupSetsByExercise(selectedWorkout.exerciseSets)).map(([name, sets]) => (
                             <div key={name}>
@@ -318,7 +351,7 @@ const WorkoutHistoryPage: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-16 text-center">
+                <div className="list-card p-16 text-center">
                   <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center text-3xl mx-auto mb-4">
                     👈
                   </div>

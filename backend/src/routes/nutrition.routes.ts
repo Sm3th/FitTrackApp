@@ -23,20 +23,22 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 });
 
 // POST /api/nutrition
-router.post('/', validate(addNutritionSchema), async (req: AuthRequest, res: Response) => {
+router.post('/', async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
-    const { name, calories, protein, carbs, fat, meal, date } = req.body;
-    if (!name || calories == null) {
-      return res.status(400).json({ success: false, error: 'name and calories are required' });
+    // Accept both old (name/meal/fat) and new (foodName/mealType/fats) field names
+    const { name, foodName, calories, protein, carbs, fat, fats, meal, mealType, date } = req.body;
+    const resolvedName = foodName || name;
+    if (!resolvedName || calories == null) {
+      return res.status(400).json({ success: false, error: 'foodName and calories are required' });
     }
     const log = await db.addNutritionLog(userId, {
-      name,
+      foodName: resolvedName,
+      mealType: mealType || meal || 'snack',
       calories: Number(calories),
-      protein: protein ? Number(protein) : null,
-      carbs: carbs ? Number(carbs) : null,
-      fat: fat ? Number(fat) : null,
-      meal: meal || 'snack',
+      protein: protein != null ? Number(protein) : null,
+      carbs: carbs != null ? Number(carbs) : null,
+      fats: fats != null ? Number(fats) : fat != null ? Number(fat) : null,
       date: date ? new Date(date) : new Date(),
     });
     return res.status(201).json({ success: true, data: log });

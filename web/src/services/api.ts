@@ -32,6 +32,14 @@ apiClient.interceptors.response.use(
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
+    } else if (error.response?.status === 429) {
+      // Rate limited — attach a friendly message
+      error.message = 'Too many requests. Please slow down and try again in a moment.';
+    } else if (!error.response && error.code === 'ERR_NETWORK') {
+      // Offline / server unreachable
+      error.message = 'Unable to connect to the server. Check your internet connection.';
+    } else if (error.response?.status >= 500) {
+      error.message = 'Server error. Please try again later.';
     }
     return Promise.reject(error);
   }

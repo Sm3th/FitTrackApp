@@ -1,12 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import apiClient from '../services/api';
 import ExerciseSelector from './ExerciseSelector';
 import RestTimer from './RestTimer';
 import Toast from './Toast';
 import { useToast } from '../hooks/useToast';
 import { soundEffects } from '../utils/soundEffects';
+import { haptics } from '../utils/haptics';
 import { getExerciseGuideByName, ExerciseGuide } from '../data/exerciseGuides';
 import ExerciseDemoModal from './ExerciseDemoModal';
+import { useUnits } from '../hooks/useUnits';
+
+// 1RM tracker — saves best estimated 1RM per exercise to localStorage
+const epley1RM = (weight: number, reps: number) =>
+  reps === 1 ? weight : weight * (1 + reps / 30);
+
+const update1RM = (exerciseName: string, weight: number, reps: number) => {
+  if (!weight || !reps) return;
+  const est = Math.round(epley1RM(weight, reps));
+  const key = 'fittrack_1rm';
+  try {
+    const stored: Record<string, { value: number; date: string }> =
+      JSON.parse(localStorage.getItem(key) || '{}');
+    const prev = stored[exerciseName]?.value || 0;
+    if (est > prev) {
+      stored[exerciseName] = { value: est, date: new Date().toISOString().slice(0, 10) };
+      localStorage.setItem(key, JSON.stringify(stored));
+    }
+  } catch {}
+};
 
 interface Exercise {
   id: string;
@@ -23,6 +44,7 @@ interface ExerciseSet {
   reps?: number;
   weight?: number;
   notes?: string;
+  isSuperset?: boolean;
 }
 
 interface ActiveWorkoutProps {
@@ -31,7 +53,12 @@ interface ActiveWorkoutProps {
 }
 
 const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggestedExercises }) => {
+  const { weightUnit, toStorageWeight, fromStorageWeight, isImperial } = useUnits();
+  const weightStep = isImperial ? 5 : 2.5;
   const [sets, setSets] = useState<ExerciseSet[]>([]);
+  const [exerciseOrder, setExerciseOrder] = useState<string[]>([]);
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
   const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
   const [reps, setReps] = useState<string>('');
   const [weight, setWeight] = useState<string>('');
@@ -40,6 +67,7 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
   const [showRestTimer, setShowRestTimer] = useState(false);
   const [restDuration, setRestDuration] = useState(60);
   const [editingSetIndex, setEditingSetIndex] = useState<number | null>(null);
+  const [isSupersetMode, setIsSupersetMode] = useState(false);
   const [editNote, setEditNote] = useState<string>('');
   const [demoGuide, setDemoGuide] = useState<ExerciseGuide | null>(null);
   const { toast, showToast, hideToast } = useToast();
@@ -70,7 +98,8 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
     }
 
     const parsedReps = parseInt(reps);
-    const parsedWeight = weight ? parseFloat(weight) : undefined;
+    // Convert display unit (lbs/kg) → storage unit (always kg)
+    const parsedWeight = weight ? toStorageWeight(parseFloat(weight)) : undefined;
     const pr = isPR(parsedReps, parsedWeight);
 
     const newSet: ExerciseSet = {
@@ -80,9 +109,13 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
       reps: parsedReps,
       weight: parsedWeight,
       notes: noteInput.trim() || undefined,
+      isSuperset: isSupersetMode,
     };
 
     setSets([...sets, newSet]);
+    if (!exerciseOrder.includes(currentExercise.id)) {
+      setExerciseOrder(prev => [...prev, currentExercise.id]);
+    }
     setReps('');
     setWeight('');
     setNoteInput('');
@@ -96,13 +129,18 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
         weight: newSet.weight,
         notes: newSet.notes,
       });
+      // Update 1RM tracker
+      if (parsedWeight) update1RM(currentExercise.name, parsedWeight, parsedReps);
       if (pr) {
         showToast('🏆 New Personal Record!', 'success');
+        haptics.achievement();
       } else {
         showToast('Set logged! 💪', 'success');
+        haptics.success();
       }
       soundEffects.success();
-      setShowRestTimer(true);
+      // Skip rest timer in superset mode (go straight to next exercise)
+      if (!isSupersetMode) setShowRestTimer(true);
     } catch (error) {
       console.error('Failed to save set:', error);
       showToast('Failed to save set', 'error');
@@ -121,7 +159,8 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
     setEditingSetIndex(index);
     const set = sets[index];
     setReps(set.reps?.toString() || '');
-    setWeight(set.weight?.toString() || '');
+    // Convert stored kg → display unit for editing
+    setWeight(set.weight != null ? String(fromStorageWeight(set.weight)) : '');
     setEditNote(set.notes || '');
   };
 
@@ -134,7 +173,7 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
     newSets[index] = {
       ...newSets[index],
       reps: parseInt(reps),
-      weight: weight ? parseFloat(weight) : undefined,
+      weight: weight ? toStorageWeight(parseFloat(weight)) : undefined,
       notes: editNote.trim() || undefined,
     };
     setSets(newSets);
@@ -160,6 +199,30 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
     return acc;
   }, {} as Record<string, { exerciseName: string; sets: ExerciseSet[] }>);
 
+  // Ordered exercise list for rendering
+  const orderedExerciseIds = exerciseOrder.filter(id => groupedSets[id]);
+
+  const handleDragStart = (index: number) => { dragItem.current = index; };
+  const handleDragEnter = (index: number) => { dragOverItem.current = index; };
+  const handleDragEnd = () => {
+    if (dragItem.current === null || dragOverItem.current === null) return;
+    const newOrder = [...orderedExerciseIds];
+    const [dragged] = newOrder.splice(dragItem.current, 1);
+    newOrder.splice(dragOverItem.current, 0, dragged);
+    setExerciseOrder(newOrder);
+    dragItem.current = null;
+    dragOverItem.current = null;
+  };
+
+  const moveExercise = (index: number, dir: -1 | 1) => {
+    const newOrder = [...orderedExerciseIds];
+    const target = index + dir;
+    if (target < 0 || target >= newOrder.length) return;
+    [newOrder[index], newOrder[target]] = [newOrder[target], newOrder[index]];
+    setExerciseOrder(newOrder);
+    haptics.tap();
+  };
+
   const currentExerciseSetCount = currentExercise
     ? sets.filter(s => s.exerciseId === currentExercise.id).length
     : 0;
@@ -183,7 +246,7 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
         <div className="rounded-2xl border border-indigo-500/20 overflow-hidden"
           style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.06))' }}>
           <div className="px-4 pt-3 pb-2">
-            <p className="text-xs font-black text-indigo-400 uppercase tracking-widest mb-2.5">Suggested for this session</p>
+            <p className="section-label mb-2.5">Suggested for this session</p>
             <div className="flex flex-wrap gap-2">
               {suggestedExercises.map(ex => {
                 const done = startedSuggested.has(ex);
@@ -229,7 +292,7 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
 
       {/* Current Exercise Panel */}
       {currentExercise && (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="list-card overflow-hidden">
           {/* Exercise header */}
           <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 dark:border-slate-800 bg-gradient-to-r from-blue-500/5 to-indigo-500/5">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-sm">
@@ -282,16 +345,16 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Weight (kg)</label>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Weight ({weightUnit})</label>
                 <div className="flex items-center rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 overflow-hidden h-14">
                   <button
                     type="button"
-                    onPointerDown={() => setWeight(v => String(Math.max(0, (parseFloat(v) || 0) - 2.5)))}
+                    onPointerDown={() => setWeight(v => String(Math.max(0, (parseFloat(v) || 0) - weightStep)))}
                     className="w-12 h-full flex items-center justify-center text-xl font-black text-gray-400 dark:text-gray-500 active:bg-gray-200 dark:active:bg-slate-700 transition-colors touch-manipulation flex-shrink-0"
                   >−</button>
                   <input
                     type="number"
-                    step="2.5"
+                    step={weightStep}
                     value={weight}
                     onChange={(e) => setWeight(e.target.value)}
                     placeholder="0"
@@ -299,7 +362,7 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
                   />
                   <button
                     type="button"
-                    onPointerDown={() => setWeight(v => String((parseFloat(v) || 0) + 2.5))}
+                    onPointerDown={() => setWeight(v => String((parseFloat(v) || 0) + weightStep))}
                     className="w-12 h-full flex items-center justify-center text-xl font-black text-gray-400 dark:text-gray-500 active:bg-gray-200 dark:active:bg-slate-700 transition-colors touch-manipulation flex-shrink-0"
                   >+</button>
                 </div>
@@ -319,8 +382,21 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
               />
             </div>
 
+            {/* Superset toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Superset Mode</p>
+                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">Skip rest — go straight to next exercise</p>
+              </div>
+              <button
+                onClick={() => setIsSupersetMode(s => !s)}
+                className={`relative w-11 h-6 rounded-full transition-colors ${isSupersetMode ? 'bg-purple-600' : 'bg-gray-200 dark:bg-slate-700'}`}>
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isSupersetMode ? 'translate-x-5' : ''}`} />
+              </button>
+            </div>
+
             {/* Rest Duration */}
-            <div>
+            <div className={isSupersetMode ? 'opacity-40 pointer-events-none' : ''}>
               <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Rest After Set</label>
               <div className="grid grid-cols-4 gap-2">
                 {[30, 60, 90, 120].map(seconds => (
@@ -355,7 +431,7 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
 
       {/* Logged Sets */}
       {Object.keys(groupedSets).length > 0 && (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="list-card overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
             <h3 className="font-black text-gray-900 dark:text-white text-base">Today's Sets</h3>
             <span className="text-xs font-bold text-gray-400 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
@@ -364,9 +440,35 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
           </div>
 
           <div className="divide-y divide-gray-50 dark:divide-slate-800">
-            {Object.entries(groupedSets).map(([exerciseId, data]) => (
-              <div key={exerciseId} className="px-5 py-4">
-                <h4 className="text-sm font-black text-gray-700 dark:text-gray-300 mb-3">{data.exerciseName}</h4>
+            {orderedExerciseIds.map((exerciseId, orderIdx) => {
+              const data = groupedSets[exerciseId];
+              if (!data) return null;
+              return (
+              <div key={exerciseId} className="px-5 py-4"
+                draggable
+                onDragStart={() => handleDragStart(orderIdx)}
+                onDragEnter={() => handleDragEnter(orderIdx)}
+                onDragEnd={handleDragEnd}
+                onDragOver={e => e.preventDefault()}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  {/* Drag handle */}
+                  <span className="text-gray-300 dark:text-gray-600 cursor-grab active:cursor-grabbing touch-manipulation select-none text-lg leading-none" title="Drag to reorder">⠿</span>
+                  <h4 className="text-sm font-black text-gray-700 dark:text-gray-300 flex-1">{data.exerciseName}</h4>
+                  {/* Move up/down for mobile */}
+                  {orderedExerciseIds.length > 1 && (
+                    <div className="flex gap-1">
+                      <button onClick={() => moveExercise(orderIdx, -1)} disabled={orderIdx === 0}
+                        className="w-6 h-6 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-400 disabled:opacity-30 hover:text-gray-600 dark:hover:text-gray-200 transition-colors touch-manipulation text-xs">
+                        ▲
+                      </button>
+                      <button onClick={() => moveExercise(orderIdx, 1)} disabled={orderIdx === orderedExerciseIds.length - 1}
+                        className="w-6 h-6 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-400 disabled:opacity-30 hover:text-gray-600 dark:hover:text-gray-200 transition-colors touch-manipulation text-xs">
+                        ▼
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <div className="space-y-2">
                   {data.sets.map((set, index) => {
                     const globalIndex = sets.findIndex(s => s === set);
@@ -391,10 +493,10 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
                                 step="0.5"
                                 value={weight}
                                 onChange={(e) => setWeight(e.target.value)}
-                                placeholder="kg"
+                                placeholder={weightUnit}
                                 className="w-16 px-2 py-1.5 text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
                               />
-                              <span className="text-xs text-gray-400">kg</span>
+                              <span className="text-xs text-gray-400">{weightUnit}</span>
                               <button onClick={() => handleSaveEdit(globalIndex)} className="ml-auto p-2 -m-1 text-emerald-500 hover:text-emerald-400 active:text-emerald-300 font-black text-lg touch-manipulation">✓</button>
                               <button onClick={handleCancelEdit} className="p-2 -m-1 text-gray-400 hover:text-gray-300 active:text-gray-200 font-bold touch-manipulation">✕</button>
                             </div>
@@ -415,15 +517,15 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
                               <div className="flex gap-3 text-sm flex-1">
                                 <span className="font-black text-gray-900 dark:text-white">{set.reps} <span className="font-normal text-gray-400 text-xs">reps</span></span>
                                 {set.weight && (
-                                  <span className="font-black text-gray-900 dark:text-white">{set.weight} <span className="font-normal text-gray-400 text-xs">kg</span></span>
+                                  <span className="font-black text-gray-900 dark:text-white">{fromStorageWeight(set.weight)} <span className="font-normal text-gray-400 text-xs">{weightUnit}</span></span>
                                 )}
                               </div>
-                              <button onClick={() => handleEditSet(globalIndex)} className="p-2 -m-1 text-gray-300 dark:text-gray-600 hover:text-blue-500 active:text-blue-400 transition-colors touch-manipulation">
+                              <button onClick={() => handleEditSet(globalIndex)} className="p-2 -m-1 text-gray-300 dark:text-gray-400 hover:text-blue-500 active:text-blue-400 transition-colors touch-manipulation">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                               </button>
-                              <button onClick={() => handleDeleteSet(globalIndex)} className="p-2 -m-1 text-gray-300 dark:text-gray-600 hover:text-red-500 active:text-red-400 transition-colors touch-manipulation">
+                              <button onClick={() => handleDeleteSet(globalIndex)} className="p-2 -m-1 text-gray-300 dark:text-gray-400 hover:text-red-500 active:text-red-400 transition-colors touch-manipulation">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
@@ -439,7 +541,7 @@ const ActiveWorkout: React.FC<ActiveWorkoutProps> = ({ workoutSessionId, suggest
                   })}
                 </div>
               </div>
-            ))}
+            ); })}
           </div>
         </div>
       )}

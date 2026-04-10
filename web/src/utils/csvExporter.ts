@@ -74,6 +74,35 @@ export const exportPersonalRecordsToCsv = (prs: Array<{ name: string; weight: nu
   downloadCsv(content, `fittrack-personal-records-${new Date().toISOString().split('T')[0]}.csv`);
 };
 
+export const exportNutritionToCsv = (entries: Array<{
+  date: string; name: string; meal: string; calories: number; protein: number; carbs: number; fat: number;
+}>) => {
+  const headers = ['Date', 'Food', 'Meal', 'Calories', 'Protein (g)', 'Carbs (g)', 'Fat (g)'];
+  const rows = [
+    headers,
+    ...entries.map(e => [
+      e.date, e.name, e.meal,
+      String(e.calories), String(e.protein), String(e.carbs), String(e.fat),
+    ]),
+  ];
+  const content = rows.map(row => row.map(escapeCsv).join(',')).join('\n');
+  downloadCsv(content, `fittrack-nutrition-${new Date().toISOString().split('T')[0]}.csv`);
+};
+
+export const export1RMsToCsv = () => {
+  try {
+    const stored: Record<string, { value: number; date: string }> =
+      JSON.parse(localStorage.getItem('fittrack_1rm') || '{}');
+    const headers = ['Exercise', 'Estimated 1RM (kg)', 'Date'];
+    const rows = [
+      headers,
+      ...Object.entries(stored).map(([name, { value, date }]) => [name, String(value), date]),
+    ];
+    const content = rows.map(row => row.map(escapeCsv).join(',')).join('\n');
+    downloadCsv(content, `fittrack-1rm-${new Date().toISOString().split('T')[0]}.csv`);
+  } catch {}
+};
+
 export const exportMeasurementsToCsv = (measurements: Array<{
   date: string; chest?: number; waist?: number; hips?: number;
   leftArm?: number; rightArm?: number; leftThigh?: number; rightThigh?: number; weight?: number; bodyFat?: number;

@@ -104,7 +104,7 @@ const ExplorePage: React.FC = () => {
     : null;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0d0f1a]">
+    <div className="min-h-screen">
       <Navbar />
 
       <div className="max-w-2xl mx-auto px-4 pt-5 pb-32">
@@ -170,7 +170,7 @@ const ExplorePage: React.FC = () => {
                   <div className="font-bold text-sm text-gray-900 dark:text-white">{f.label}</div>
                   <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{f.desc}</div>
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-widest"
+                <span className="text-[10px] font-semibold uppercase tracking-wide opacity-70"
                   style={{ color: f.color }}>{f.category}</span>
               </button>
             ))}
@@ -186,7 +186,7 @@ const ExplorePage: React.FC = () => {
                     style={{ background: cat.bg }}>
                     {cat.emoji}
                   </div>
-                  <h2 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">
+                  <h2 className="text-sm font-semibold text-gray-600 dark:text-gray-400">
                     {cat.title}
                   </h2>
                   <div className="flex-1 h-px bg-gray-100 dark:bg-white/[0.05]" />
@@ -213,7 +213,7 @@ const ExplorePage: React.FC = () => {
                         <div className="text-sm font-bold text-gray-900 dark:text-white leading-tight truncate">
                           {item.label}
                         </div>
-                        <div className="text-[11px] text-gray-400 dark:text-gray-600 mt-0.5 leading-tight truncate">
+                        <div className="text-[11px] text-gray-400 dark:text-gray-400 mt-0.5 leading-tight truncate">
                           {item.desc}
                         </div>
                       </div>

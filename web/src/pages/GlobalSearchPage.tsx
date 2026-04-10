@@ -136,7 +136,7 @@ const GlobalSearchPage: React.FC = () => {
         {!query && recent.length > 0 && (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-black text-gray-400 dark:text-white/30 uppercase tracking-widest">Recent</p>
+              <p className="section-label">Recent</p>
               <button onClick={() => { localStorage.removeItem(RECENT_KEY); setRecent([]); }}
                 className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Clear</button>
             </div>
@@ -159,7 +159,7 @@ const GlobalSearchPage: React.FC = () => {
         {/* Quick links (no query) */}
         {!query && (
           <div>
-            <p className="text-xs font-black text-gray-400 dark:text-white/30 uppercase tracking-widest mb-3">Quick Access</p>
+            <p className="section-label mb-3">Quick Access</p>
             <div className="grid grid-cols-2 gap-2">
               {PAGES.slice(0, 8).map(p => (
                 <button key={p.path} onClick={() => handleSelect(p)}
@@ -184,7 +184,7 @@ const GlobalSearchPage: React.FC = () => {
               <div className="text-center py-16">
                 <div className="text-4xl mb-3">🔍</div>
                 <div className="text-gray-500 dark:text-gray-400 font-medium">No results for "{query}"</div>
-                <div className="text-gray-400 dark:text-gray-600 text-sm mt-1">Try a different search term</div>
+                <div className="text-gray-400 dark:text-gray-400 text-sm mt-1">Try a different search term</div>
               </div>
             ) : (
               <div className="space-y-1.5">
@@ -198,7 +198,7 @@ const GlobalSearchPage: React.FC = () => {
                       <div className="text-sm font-bold text-gray-900 dark:text-white">{r.title}</div>
                       {r.subtitle && <div className="text-xs text-gray-400 dark:text-gray-500">{r.subtitle}</div>}
                     </div>
-                    <span className={`text-[10px] font-black uppercase tracking-widest ${CATEGORY_COLOR[r.category]}`}>
+                    <span className={`text-[10px] font-semibold uppercase tracking-wide ${CATEGORY_COLOR[r.category]}`}>
                       {CATEGORY_LABEL[r.category]}
                     </span>
                   </button>

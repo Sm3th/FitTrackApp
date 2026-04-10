@@ -275,7 +275,7 @@ const DailyChallengesPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+      <div className="min-h-screen">
         <Navbar />
         <div className="max-w-4xl mx-auto px-4 py-12 text-center">
           <div className="text-6xl mb-4">🎯</div>
@@ -286,15 +286,15 @@ const DailyChallengesPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
-      <div className="relative bg-slate-950 overflow-hidden py-12">
+      <div className="relative bg-slate-950 overflow-hidden py-8 sm:py-12">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-purple-600/10" />
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6">
-          <p className="text-indigo-400 text-sm font-semibold uppercase tracking-widest mb-2">{t('challenges.xpRewards')}</p>
+          <p className="text-indigo-400 text-sm font-semibold uppercase tracking-wide mb-2">{t('challenges.xpRewards')}</p>
           <h1 className="text-4xl font-black text-white tracking-tight mb-1">{t('challenges.title')}</h1>
           <p className="text-white/40 text-sm mb-6">{t('challenges.subtitle')}</p>
 
@@ -354,7 +354,7 @@ const DailyChallengesPage: React.FC = () => {
             return (
               <div
                 key={challenge.id}
-                className={`bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden transition-all ${
+                className={`list-card overflow-hidden transition-all ${
                   isClaimed ? 'opacity-75' : 'hover:shadow-xl hover:-translate-y-0.5'
                 }`}
               >

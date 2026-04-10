@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import BottomNav from './components/BottomNav';
 import InstallPrompt from './components/InstallPrompt';
 import OfflineBanner from './components/OfflineBanner';
@@ -72,8 +73,9 @@ function App() {
   return (
     <Router>
       <AppInner />
-      {/* Bottom padding on mobile to clear floating BottomNav */}
-      <div className="pb-24 md:pb-0">
+      {/* Bottom padding on mobile to clear fixed BottomNav (~52px + safe-area) */}
+      <div className="pb-20 md:pb-0">
+        <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <PageTransition>
           <Routes>
@@ -113,6 +115,7 @@ function App() {
           </Routes>
           </PageTransition>
         </Suspense>
+        </ErrorBoundary>
       </div>
 
       {/* Mobile bottom navigation */}

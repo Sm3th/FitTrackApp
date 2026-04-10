@@ -23,7 +23,7 @@ import {
 } from '../utils/statsHelper';
 import { calculateAchievements } from '../utils/achievements';
 import { generateWorkoutPDF } from '../utils/pdfGenerator';
-import { exportWorkoutsToCsv, exportPersonalRecordsToCsv } from '../utils/csvExporter';
+import { exportWorkoutsToCsv, exportPersonalRecordsToCsv, export1RMsToCsv } from '../utils/csvExporter';
 import EmptyState from '../components/EmptyState';
 import MuscleHeatmap from '../components/MuscleHeatmap';
 import { useTranslation } from 'react-i18next';
@@ -85,7 +85,7 @@ const StatsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+      <div className="min-h-screen">
         <Navbar />
         <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
           <div className="h-8 bg-gray-200 dark:bg-slate-800 rounded w-40 animate-pulse" />
@@ -97,7 +97,7 @@ const StatsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {workouts.length === 0 ? (
@@ -121,7 +121,7 @@ const StatsPage: React.FC = () => {
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
                 <div>
-                  <p className="text-violet-400 text-sm font-semibold uppercase tracking-widest mb-2">{t('stats.analytics')}</p>
+                  <p className="text-violet-400 text-sm font-semibold uppercase tracking-wide mb-2">{t('stats.analytics')}</p>
                   <h1 className="text-4xl font-black text-white tracking-tight mb-3">{t('stats.title')}</h1>
                   {/* Level badge */}
                   <div className="inline-flex items-center gap-3 bg-white/10 border border-white/15 backdrop-blur-sm rounded-2xl px-4 py-2.5">
@@ -155,6 +155,11 @@ const StatsPage: React.FC = () => {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
                     {t('stats.exportPrs')}
                   </button>
+                  <button onClick={export1RMsToCsv}
+                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/15 text-white text-sm px-4 py-2.5 rounded-xl font-semibold transition-all">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    1RM Data
+                  </button>
                   <button onClick={() => generateWorkoutPDF(workouts)}
                     className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white text-sm px-4 py-2.5 rounded-xl font-semibold transition-all shadow-lg shadow-blue-500/20">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -168,23 +173,29 @@ const StatsPage: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 py-5 sm:py-8 sm:px-6 lg:px-8 space-y-6">
 
             {/* Key Metrics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
-                { icon: '🔥', value: streak, label: t('stats.dayStreak'), from: 'from-orange-500', to: 'to-red-500', shadow: 'shadow-orange-500/20' },
-                { icon: '💪', value: workouts.length, label: t('stats.workoutsDone'), from: 'from-emerald-500', to: 'to-teal-500', shadow: 'shadow-emerald-500/20' },
-                { icon: '🏋️', value: `${(totalVolume / 1000).toFixed(1)}t`, label: t('stats.volumeLifted'), from: 'from-violet-500', to: 'to-purple-500', shadow: 'shadow-violet-500/20' },
-                { icon: '🎯', value: unlockedCount, label: t('stats.achievements'), from: 'from-blue-500', to: 'to-cyan-500', shadow: 'shadow-blue-500/20' },
+                { color: '#f97316', bg: 'rgba(249,115,22,0.1)',  value: streak,                           label: t('stats.dayStreak')    },
+                { color: '#10b981', bg: 'rgba(16,185,129,0.1)',  value: workouts.length,                  label: t('stats.workoutsDone') },
+                { color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)',  value: `${(totalVolume/1000).toFixed(1)}t`, label: t('stats.volumeLifted') },
+                { color: '#3b82f6', bg: 'rgba(59,130,246,0.1)',  value: unlockedCount,                    label: t('stats.achievements') },
               ].map((stat, i) => (
-                <div key={i} className={`bg-gradient-to-br ${stat.from} ${stat.to} rounded-2xl p-6 text-white text-center shadow-xl ${stat.shadow}`}>
-                  <div className="text-3xl mb-2">{stat.icon}</div>
-                  <div className="text-3xl font-black mb-1">{stat.value}</div>
-                  <div className="text-xs text-white/70 font-medium">{stat.label}</div>
+                <div key={i} className="metric-card p-4 sm:p-5">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3" style={{ background: stat.bg }}>
+                    <span className="text-base leading-none" style={{ filter: 'none' }}>
+                      {['🔥','💪','🏋️','🎯'][i]}
+                    </span>
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-black tabular-nums leading-none mb-1" style={{ color: stat.color }}>
+                    {stat.value}
+                  </div>
+                  <div className="text-[11px] sm:text-xs font-medium text-gray-500 dark:text-gray-400">{stat.label}</div>
                 </div>
               ))}
             </div>
 
             {/* This Week vs Last Week */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="list-card overflow-hidden">
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-800">
                 <h2 className="font-bold text-gray-900 dark:text-white">{t('stats.thisWeek')}</h2>
                 <span className="text-xs text-gray-400 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-full font-medium">{t('stats.vsLastWeek')}</span>
@@ -221,7 +232,7 @@ const StatsPage: React.FC = () => {
             </div>
 
             {/* Charts */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
+            <div className="list-card p-6">
               <div className="flex flex-wrap gap-2 mb-6">
                 {[
                   { key: 'weekly', label: t('stats.tabs.weekly') },
@@ -266,7 +277,7 @@ const StatsPage: React.FC = () => {
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="h-64 flex items-center justify-center text-gray-400 dark:text-gray-600">{t('stats.noWorkoutsThisWeek')}</div>
+                    <div className="h-64 flex items-center justify-center text-gray-400 dark:text-gray-400">{t('stats.noWorkoutsThisWeek')}</div>
                   )}
                 </div>
               )}
@@ -287,7 +298,7 @@ const StatsPage: React.FC = () => {
                       </LineChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="h-64 flex flex-col items-center justify-center text-gray-400 dark:text-gray-600 gap-2">
+                    <div className="h-64 flex flex-col items-center justify-center text-gray-400 dark:text-gray-400 gap-2">
                       <span className="text-4xl">📈</span>
                       <p>{t('stats.needMoreWorkouts')}</p>
                     </div>
@@ -311,7 +322,7 @@ const StatsPage: React.FC = () => {
                       </LineChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="h-64 flex flex-col items-center justify-center text-gray-400 dark:text-gray-600 gap-2">
+                    <div className="h-64 flex flex-col items-center justify-center text-gray-400 dark:text-gray-400 gap-2">
                       <span className="text-4xl">🏃</span>
                       <p>{t('stats.needMoreWorkouts')}</p>
                     </div>
@@ -325,7 +336,7 @@ const StatsPage: React.FC = () => {
                   {muscleBreakdown.length > 0 ? (
                     <MuscleHeatmap muscleBreakdown={muscleBreakdown} />
                   ) : (
-                    <div className="h-64 flex flex-col items-center justify-center text-gray-400 dark:text-gray-600 gap-2">
+                    <div className="h-64 flex flex-col items-center justify-center text-gray-400 dark:text-gray-400 gap-2">
                       <span className="text-4xl">💪</span>
                       <p>{t('stats.noMuscleData')}</p>
                     </div>
@@ -336,7 +347,7 @@ const StatsPage: React.FC = () => {
 
             {/* Top Exercises & Personal Records */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
+              <div className="list-card p-6">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-5">{t('stats.topExercises')}</h2>
                 {topExercises.length > 0 ? (() => {
                   const maxSets = Math.max(...topExercises.map(e => e.totalSets));
@@ -371,11 +382,11 @@ const StatsPage: React.FC = () => {
                     </div>
                   );
                 })() : (
-                  <div className="text-center py-8 text-gray-400 dark:text-gray-600">{t('stats.noExercises')}</div>
+                  <div className="text-center py-8 text-gray-400 dark:text-gray-400">{t('stats.noExercises')}</div>
                 )}
               </div>
 
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
+              <div className="list-card p-6">
                 <div className="flex justify-between items-center mb-5">
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('stats.personalRecords')}</h2>
                   {personalRecords.length > 0 && (
@@ -401,14 +412,14 @@ const StatsPage: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-400 dark:text-gray-600">{t('stats.noRecords')}</div>
+                  <div className="text-center py-8 text-gray-400 dark:text-gray-400">{t('stats.noRecords')}</div>
                 )}
               </div>
             </div>
 
             {/* Smart Insights */}
             {smartInsights.length > 0 && (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+              <div className="list-card overflow-hidden">
                 <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-slate-800">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-sm">✨</div>
                   <div>

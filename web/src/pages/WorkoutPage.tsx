@@ -28,10 +28,10 @@ const STAR_COLORS = ['', 'text-red-400', 'text-orange-400', 'text-yellow-400', '
 const WorkoutPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const navState = (location.state as { suggestedExercises?: string[]; muscleName?: string } | null);
+  const navState = (location.state as { suggestedExercises?: string[]; muscleName?: string; templateName?: string } | null);
   const [activeWorkout, setActiveWorkout] = useState<WorkoutSession | null>(null);
   const [workoutName, setWorkoutName] = useState(
-    navState?.muscleName ? `${navState.muscleName} Day` : ''
+    navState?.templateName || (navState?.muscleName ? `${navState.muscleName} Day` : '')
   );
   const [loading, setLoading] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
@@ -45,9 +45,17 @@ const WorkoutPage: React.FC = () => {
   const [prevLevelInfo, setPrevLevelInfo] = useState<import('../utils/xpSystem').LevelInfo | null>(null);
   const [newLevelInfo, setNewLevelInfo] = useState<import('../utils/xpSystem').LevelInfo | null>(null);
   const [xpLeveledUp, setXpLeveledUp] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const workoutStartRef = useRef<Date>(new Date());
   const { toast, showToast, hideToast } = useToast();
   const { t } = useTranslation();
+
+  const handlePauseResume = () => {
+    setIsPaused(p => {
+      haptics.tap();
+      return !p;
+    });
+  };
 
   useEffect(() => {
     if (!localStorage.getItem('token')) navigate('/login');
@@ -88,7 +96,10 @@ const WorkoutPage: React.FC = () => {
     setShowRatingModal(false);
     try {
       setLoading(true);
-      await apiClient.patch(`/workouts/sessions/${activeWorkout.id}/end`, {});
+      await apiClient.patch(`/workouts/sessions/${activeWorkout.id}/end`, {
+        rating: workoutRating || undefined,
+        ratingNote: ratingNote.trim() || undefined,
+      });
       soundEffects.workoutComplete();
       haptics.workoutComplete();
       showToast('Workout completed! Amazing work! 🎉', 'success');
@@ -122,7 +133,7 @@ const WorkoutPage: React.FC = () => {
   const displayStar = hoveredStar || workoutRating;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Page Hero */}
@@ -205,14 +216,26 @@ const WorkoutPage: React.FC = () => {
                     Started {new Date(activeWorkout.startTime).toLocaleTimeString()}
                   </p>
                 </div>
-                <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-black"
-                  style={{
-                    background: 'color-mix(in srgb, var(--p-500) 12%, transparent)',
-                    color: 'var(--p-text)',
-                    border: '1px solid color-mix(in srgb, var(--p-500) 20%, transparent)',
-                  }}>
-                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--p-500)' }} />
-                  <WorkoutTimer startTime={activeWorkout.startTime} />
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-black"
+                    style={{
+                      background: 'color-mix(in srgb, var(--p-500) 12%, transparent)',
+                      color: 'var(--p-text)',
+                      border: '1px solid color-mix(in srgb, var(--p-500) 20%, transparent)',
+                    }}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${isPaused ? 'bg-yellow-400' : 'animate-pulse'}`} style={!isPaused ? { background: 'var(--p-500)' } : undefined} />
+                    <WorkoutTimer startTime={activeWorkout.startTime} isPaused={isPaused} />
+                  </div>
+                  <button
+                    onClick={handlePauseResume}
+                    className="w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90"
+                    style={{ background: 'color-mix(in srgb, var(--p-500) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--p-500) 20%, transparent)' }}
+                    title={isPaused ? 'Resume workout' : 'Pause workout'}>
+                    {isPaused
+                      ? <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" style={{ color: 'var(--p-text)' }}><path d="M8 5v14l11-7z"/></svg>
+                      : <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" style={{ color: 'var(--p-text)' }}><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    }
+                  </button>
                 </div>
               </div>
               <div className="p-4 sm:p-6">

@@ -43,7 +43,7 @@ const SharedWorkoutPage: React.FC = () => {
   };
 
   if (error) return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="text-6xl">😕</div>
@@ -54,7 +54,7 @@ const SharedWorkoutPage: React.FC = () => {
   );
 
   if (!workout) return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
@@ -63,16 +63,16 @@ const SharedWorkoutPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Hero */}
-      <div className="relative bg-slate-950 overflow-hidden py-12">
+      <div className="relative bg-slate-950 overflow-hidden py-8 sm:py-12">
         <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 to-red-600/10" />
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-orange-400 text-sm font-semibold uppercase tracking-widest mb-2">
+          <p className="text-orange-400 text-sm font-semibold uppercase tracking-wide mb-2">
             {t('sharedWorkout.sharedBy')} {workout.sharedBy}
           </p>
           <h1 className="text-4xl font-black text-white tracking-tight mb-1">{workout.name}</h1>
@@ -91,7 +91,7 @@ const SharedWorkoutPage: React.FC = () => {
             { label: t('sharedWorkout.exercises'), value: workout.exercises.length },
             { label: t('sharedWorkout.volume'), value: `${(workout.totalVolume / 1000).toFixed(1)}t` },
           ].map(s => (
-            <div key={s.label} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-4 text-center shadow-sm">
+            <div key={s.label} className="list-card p-4 text-center">
               <p className="text-2xl font-black text-gray-900 dark:text-white">{s.value}</p>
               <p className="text-xs text-gray-400 mt-0.5">{s.label}</p>
             </div>
@@ -99,7 +99,7 @@ const SharedWorkoutPage: React.FC = () => {
         </div>
 
         {/* Exercise list */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="list-card overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-800">
             <h2 className="font-black text-gray-900 dark:text-white">{t('sharedWorkout.exercises')}</h2>
           </div>

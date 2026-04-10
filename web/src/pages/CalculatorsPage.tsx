@@ -96,15 +96,15 @@ const CalculatorsPage: React.FC = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
-      <div className="relative bg-slate-950 overflow-hidden py-12">
+      <div className="relative bg-slate-950 overflow-hidden py-8 sm:py-12">
         <div className="absolute inset-0 bg-gradient-to-br from-amber-600/20 to-orange-600/10" />
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6">
-          <p className="text-amber-400 text-sm font-semibold uppercase tracking-widest mb-2">{t('calculators.tools')}</p>
+          <p className="text-amber-400 text-sm font-semibold uppercase tracking-wide mb-2">{t('calculators.tools')}</p>
           <h1 className="text-4xl font-black text-white tracking-tight mb-1">{t('calculators.title')}</h1>
           <p className="text-white/40 text-sm">{t('calculators.subtitle')}</p>
         </div>
@@ -134,7 +134,7 @@ const CalculatorsPage: React.FC = () => {
         {/* 1RM Calculator */}
         {tab === '1rm' && (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
+            <div className="list-card p-6">
               <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">{t('calculators.oneRepMaxTitle')}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
                 {t('calculators.oneRepMaxSubtitle')}
@@ -183,7 +183,7 @@ const CalculatorsPage: React.FC = () => {
 
             {/* Percentage Table */}
             {oneRM && (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+              <div className="list-card overflow-hidden">
                 <div className="p-6 border-b dark:border-slate-700">
                   <h3 className="font-bold text-gray-900 dark:text-gray-100">{t('calculators.trainingPercentages')}</h3>
                 </div>
@@ -221,7 +221,7 @@ const CalculatorsPage: React.FC = () => {
         {/* TDEE Calculator */}
         {tab === 'tdee' && (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
+            <div className="list-card p-6">
               <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">{t('calculators.tdeeTitle')}</h2>
               <p className="text-sm text-gray-500 mb-5">{t('calculators.tdeeSubtitle')}</p>
 
@@ -302,7 +302,7 @@ const CalculatorsPage: React.FC = () => {
         {/* Macro Calculator */}
         {tab === 'macro' && (
           <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
+            <div className="list-card p-6">
               <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">{t('calculators.macroTitle')}</h2>
               <p className="text-sm text-gray-500 mb-5">{t('calculators.macroSubtitle')}</p>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import apiClient from '../services/api';
 import Navbar from '../components/Navbar';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
@@ -92,13 +93,19 @@ const GoalsPage: React.FC = () => {
 
   useEffect(() => {
     if (!localStorage.getItem('token')) { navigate('/login'); return; }
-    setTimeout(() => {
-      setGoals(loadGoals());
-      setPageLoading(false);
-    }, 400);
+    // Load from localStorage immediately
+    setGoals(loadGoals());
+    // Then fetch from API
+    apiClient.get('/goals').then(res => {
+      const items: Goal[] = (res.data?.data || res.data || []);
+      if (items.length > 0) {
+        setGoals(items);
+        saveGoals(items);
+      }
+    }).catch(() => {}).finally(() => setPageLoading(false));
   }, [navigate]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title || form.targetValue == null || form.currentValue == null) {
       showToast(t('goals.fillRequired'), 'warning');
       return;
@@ -107,17 +114,26 @@ const GoalsPage: React.FC = () => {
       const updated = goals.map(g => g.id === editingId ? { ...g, ...form } as Goal : g);
       setGoals(updated);
       saveGoals(updated);
+      apiClient.patch(`/goals/${editingId}`, { currentValue: form.currentValue, status: form.status }).catch(() => {});
       showToast(t('goals.goalUpdated'), 'success');
     } else {
-      const goal: Goal = {
-        ...(form as Goal),
-        id: Date.now().toString(),
-        status: 'active',
-      };
+      const tempId = Date.now().toString();
+      const goal: Goal = { ...(form as Goal), id: tempId, status: 'active' };
       const updated = [...goals, goal];
       setGoals(updated);
       saveGoals(updated);
       showToast(t('goals.goalCreated'), 'success');
+      // Sync to API and update id
+      apiClient.post('/goals', form).then(res => {
+        const serverId = res.data?.data?.id || res.data?.id;
+        if (serverId) {
+          setGoals(prev => {
+            const synced = prev.map(g => g.id === tempId ? { ...g, id: serverId } : g);
+            saveGoals(synced);
+            return synced;
+          });
+        }
+      }).catch(() => {});
     }
     setShowForm(false);
     setEditingId(null);
@@ -129,6 +145,7 @@ const GoalsPage: React.FC = () => {
     const updated = goals.filter(g => g.id !== id);
     setGoals(updated);
     saveGoals(updated);
+    apiClient.delete(`/goals/${id}`).catch(() => {});
     showToast(t('goals.goalDeleted'), 'info' as any);
   };
 
@@ -136,6 +153,7 @@ const GoalsPage: React.FC = () => {
     const updated = goals.map(g => g.id === id ? { ...g, status: 'completed' as GoalStatus } : g);
     setGoals(updated);
     saveGoals(updated);
+    apiClient.patch(`/goals/${id}`, { status: 'completed' }).catch(() => {});
     showToast(t('goals.goalCompleted'), 'success');
   };
 
@@ -143,6 +161,7 @@ const GoalsPage: React.FC = () => {
     const updated = goals.map(g => g.id === id ? { ...g, currentValue: value } : g);
     setGoals(updated);
     saveGoals(updated);
+    apiClient.patch(`/goals/${id}`, { currentValue: value }).catch(() => {});
   };
 
   const useTemplate = (tmpl: typeof TEMPLATES[0]) => {
@@ -159,7 +178,7 @@ const GoalsPage: React.FC = () => {
   const completedGoals = goals.filter(g => g.status === 'completed');
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Hero */}
@@ -169,7 +188,7 @@ const GoalsPage: React.FC = () => {
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 flex items-center justify-between">
           <div>
-            <p className="text-violet-400 text-sm font-bold uppercase tracking-widest mb-1">{t('goals.goalTracker')}</p>
+            <p className="text-violet-400 text-sm font-bold uppercase tracking-wide mb-1">{t('goals.goalTracker')}</p>
             <h1 className="text-4xl font-black text-white tracking-tight mb-1">{t('goals.title')}</h1>
             <p className="text-white/40 text-sm">{t('goals.subtitle')}</p>
           </div>
@@ -203,7 +222,7 @@ const GoalsPage: React.FC = () => {
               const isOverdue = remaining === 0;
               return (
                 <div key={goal.id}
-                  className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-6 card-lift animate-fade-up"
+                  className="list-card p-6 card-lift animate-fade-up"
                   style={{ animationDelay: `${idx * 70}ms`, animationFillMode: 'both' }}>
                   <div className="flex items-start gap-4">
                     {/* Ring */}
@@ -290,7 +309,7 @@ const GoalsPage: React.FC = () => {
             <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('goals.completedGoals')}</h2>
             <div className="space-y-3">
               {completedGoals.map(goal => (
-                <div key={goal.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-4 flex items-center gap-4 opacity-70">
+                <div key={goal.id} className="list-card p-4 flex items-center gap-4 opacity-70">
                   <span className="text-2xl">{goal.emoji}</span>
                   <div className="flex-1">
                     <p className="font-semibold text-gray-900 dark:text-white line-through">{goal.title}</p>

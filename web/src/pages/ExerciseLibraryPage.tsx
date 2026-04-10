@@ -170,7 +170,7 @@ const ExerciseDetailContent = React.memo<DetailProps>(({ exercise, prData, prLoa
   const t = tFunc as (key: string, fallback?: string) => string;
   const pr = prData.length > 0 ? Math.max(...prData.map(d => d.weight)) : null;
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 sticky top-4">
+    <div className="list-card p-6 sticky top-4">
       <div className="flex items-center justify-between mb-4">
         <div className={`w-12 h-12 ${MUSCLE_COLORS[exercise.muscleGroup] || 'bg-gray-400'} rounded-xl flex items-center justify-center text-2xl`}>
           {exercise.icon}
@@ -270,6 +270,7 @@ const ExerciseLibraryPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [muscleFilter, setMuscleFilter] = useState('All');
   const [difficultyFilter, setDifficultyFilter] = useState('All');
+  const [sortBy, setSortBy] = useState<'name' | 'difficulty' | 'muscle'>('name');
 
   const muscleLabel = (key: string) => key === 'All' ? t('library.allMuscles') : t(`library.${key.toLowerCase()}` as any, key);
   const difficultyLabel = (key: string) => {
@@ -317,27 +318,36 @@ const ExerciseLibraryPage: React.FC = () => {
 
   const debouncedSearch = useDebounce(searchQuery, 200);
 
-  const filtered = useMemo(() =>
-    EXERCISES.filter(e => {
+  const DIFFICULTY_ORDER = { beginner: 0, intermediate: 1, advanced: 2 };
+
+  const filtered = useMemo(() => {
+    const results = EXERCISES.filter(e => {
       const matchesSearch = !debouncedSearch || e.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || e.description.toLowerCase().includes(debouncedSearch.toLowerCase());
       const matchesMuscle = muscleFilter === 'All' || e.muscleGroup === muscleFilter;
       const matchesDifficulty = difficultyFilter === 'All' || e.difficulty === difficultyFilter;
       return matchesSearch && matchesMuscle && matchesDifficulty;
-    }),
-    [debouncedSearch, muscleFilter, difficultyFilter]
-  );
+    });
+    if (sortBy === 'difficulty') {
+      results.sort((a, b) => (DIFFICULTY_ORDER[a.difficulty as keyof typeof DIFFICULTY_ORDER] || 0) - (DIFFICULTY_ORDER[b.difficulty as keyof typeof DIFFICULTY_ORDER] || 0));
+    } else if (sortBy === 'muscle') {
+      results.sort((a, b) => a.muscleGroup.localeCompare(b.muscleGroup));
+    } else {
+      results.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return results;
+  }, [debouncedSearch, muscleFilter, difficultyFilter, sortBy]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Header */}
-      <div className="relative bg-slate-950 overflow-hidden py-12">
+      <div className="relative bg-slate-950 overflow-hidden py-8 sm:py-12">
         <div className="absolute inset-0 bg-gradient-to-br from-amber-600/20 to-orange-600/10" />
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-amber-400 text-sm font-semibold uppercase tracking-widest mb-2">{t('library.reference')}</p>
+          <p className="text-amber-400 text-sm font-semibold uppercase tracking-wide mb-2">{t('library.reference')}</p>
           <h1 className="text-4xl font-black text-white tracking-tight mb-1">{t('library.title')}</h1>
           <p className="text-white/40 text-sm">{EXERCISES.length} {t('library.subtitle')}</p>
         </div>
@@ -345,7 +355,7 @@ const ExerciseLibraryPage: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-5 sm:py-8 sm:px-6 lg:px-8">
         {/* Search + Filters */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm p-5 mb-6 space-y-4">
+        <div className="list-card p-5 mb-6 space-y-4">
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
             <input
@@ -377,21 +387,34 @@ const ExerciseLibraryPage: React.FC = () => {
             ))}
           </div>
 
-          {/* Difficulty Filter */}
-          <div className="flex gap-2">
-            {DIFFICULTY_KEYS.map(d => (
-              <button
-                key={d}
-                onClick={() => setDifficultyFilter(d)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  difficultyFilter === d
-                    ? 'bg-gray-800 dark:bg-gray-100 text-white dark:text-gray-900'
-                    : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                {difficultyLabel(d)}
-              </button>
-            ))}
+          {/* Difficulty + Sort row */}
+          <div className="flex flex-wrap gap-2 items-center justify-between">
+            <div className="flex gap-2 flex-wrap">
+              {DIFFICULTY_KEYS.map(d => (
+                <button
+                  key={d}
+                  onClick={() => setDifficultyFilter(d)}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    difficultyFilter === d
+                      ? 'bg-gray-800 dark:bg-gray-100 text-white dark:text-gray-900'
+                      : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {difficultyLabel(d)}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400 font-medium">Sort:</span>
+              {(['name', 'muscle', 'difficulty'] as const).map(s => (
+                <button key={s} onClick={() => setSortBy(s)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                    sortBy === s ? 'bg-orange-500 text-white' : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400'
+                  }`}>
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

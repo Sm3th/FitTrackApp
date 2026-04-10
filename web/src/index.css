@@ -90,17 +90,22 @@
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "cv02","cv03","cv04","cv11";
     @apply text-gray-900 dark:text-gray-100;
-    background-color: #f8fafc;
-    background-image:
-      radial-gradient(ellipse at 20% 0%, rgba(79,110,247,0.055) 0%, transparent 55%),
-      radial-gradient(ellipse at 80% 10%, rgba(124,58,237,0.04) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 100%, rgba(16,185,129,0.03) 0%, transparent 55%);
+    background-color: #f2f2f7; /* Apple's system grouped background */
     transition: background-color 0.3s ease, color 0.3s ease;
   }
-  /* Dark mode: remove gradient, use flat deep dark */
+  /* Dark mode: Apple-style near-black */
   .dark body {
     background-color: #0d0f1a;
-    background-image: none;
+  }
+
+  /* Bottom nav tokens */
+  :root {
+    --bottom-nav-bg: rgba(255,255,255,0.92);
+    --bottom-nav-border: 0.5px solid rgba(0,0,0,0.12);
+  }
+  .dark {
+    --bottom-nav-bg: rgba(18,18,22,0.94);
+    --bottom-nav-border: 0.5px solid rgba(255,255,255,0.07);
   }
 
   /* Premium text selection */
@@ -316,6 +321,23 @@
   /* ── Divider ─── */
   .divider {
     @apply border-t border-gray-100 dark:border-[#1e2235];
+  }
+
+  /* ── Apple-style section label ─── */
+  /* Use instead of uppercase tracking-widest everywhere */
+  .section-label {
+    @apply text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── Apple-style list card ─── */
+  /* Groups of items with dividers — like iOS Settings/Health */
+  .list-card {
+    @apply bg-white dark:bg-[#1c1c1e] rounded-2xl border border-black/[0.06] dark:border-white/[0.07];
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
+  }
+  .dark .list-card {
+    box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 20px rgba(0,0,0,0.4);
   }
 }
 
@@ -747,8 +769,8 @@ button, a, [role="button"] {
   transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
 }
 .dark .surface-elevated {
-  background: linear-gradient(145deg, #13151f 0%, #111320 100%);
-  border-color: rgba(255,255,255,0.06);
+  background: #1c1c1e;
+  border-color: rgba(255,255,255,0.07);
   box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.04) inset;
 }
 .surface-elevated:hover {
@@ -804,26 +826,26 @@ button, a, [role="button"] {
   box-shadow: 0 12px 40px rgba(0,0,0,0.45);
 }
 
+/* Clean neutral today-summary cards */
 .surface-tinted-green {
-  background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(6,182,212,0.04));
-  border: 1px solid rgba(16,185,129,0.15);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
 }
 .dark .surface-tinted-green {
-  background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(6,182,212,0.06));
-  border-color: rgba(16,185,129,0.22);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  background: #1c1c1e;
+  border-color: rgba(255,255,255,0.07);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
 }
-
 .surface-tinted-cyan {
-  background: linear-gradient(135deg, rgba(6,182,212,0.06), rgba(59,130,246,0.04));
-  border: 1px solid rgba(6,182,212,0.15);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
 }
 .dark .surface-tinted-cyan {
-  background: linear-gradient(135deg, rgba(6,182,212,0.1), rgba(59,130,246,0.06));
-  border-color: rgba(6,182,212,0.22);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  background: #1c1c1e;
+  border-color: rgba(255,255,255,0.07);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
 }
 
 .surface-achievement {
@@ -915,60 +937,62 @@ button, a, [role="button"] {
   box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.04) inset;
 }
 
-/* ─── Glow border on hover ───────────────────────────── */
+/* ─── Hover elevation (replaces card-glow) ────────────── */
+/* Clean shadow lift — no colored borders, no glows */
 .card-glow {
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
 }
 .card-glow:hover {
-  border-color: color-mix(in srgb, var(--p-500) 28%, transparent) !important;
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--p-500) 18%, transparent),
-    0 16px 48px rgba(0,0,0,0.09),
-    0 0 32px color-mix(in srgb, var(--p-500) 8%, transparent);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06);
 }
 .dark .card-glow:hover {
-  border-color: color-mix(in srgb, var(--p-500) 22%, transparent) !important;
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--p-500) 20%, transparent),
-    0 16px 48px rgba(0,0,0,0.5),
-    0 0 40px color-mix(in srgb, var(--p-500) 12%, transparent);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.3);
 }
 
-/* ─── Stat card tinted variants ─────────────────────── */
-.surface-stat-blue {
-  background: linear-gradient(135deg, rgba(59,130,246,0.07), rgba(99,102,241,0.05));
-  border: 1px solid rgba(59,130,246,0.14);
-}
-.dark .surface-stat-blue {
-  background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(99,102,241,0.07));
-  border-color: rgba(59,130,246,0.2);
-}
-.surface-stat-emerald {
-  background: linear-gradient(135deg, rgba(16,185,129,0.07), rgba(6,182,212,0.04));
-  border: 1px solid rgba(16,185,129,0.14);
-}
-.dark .surface-stat-emerald {
-  background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.06));
-  border-color: rgba(16,185,129,0.2);
-}
+/* ─── Stat card variants — neutral (Apple-style) ─────── */
+/* Color lives in the icon/number, NOT the card background */
+.surface-stat-blue,
+.surface-stat-emerald,
 .surface-stat-orange {
-  background: linear-gradient(135deg, rgba(249,115,22,0.07), rgba(239,68,68,0.04));
-  border: 1px solid rgba(249,115,22,0.14);
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
 }
+.dark .surface-stat-blue,
+.dark .surface-stat-emerald,
 .dark .surface-stat-orange {
-  background: linear-gradient(135deg, rgba(249,115,22,0.12), rgba(239,68,68,0.06));
-  border-color: rgba(249,115,22,0.2);
+  background: #1c1c1e;
+  border-color: rgba(255,255,255,0.07);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 20px rgba(0,0,0,0.35);
 }
 
-/* ─── Streak hot card ────────────────────────────────── */
+/* ─── Streak hot — very subtle warm tint only ────────── */
 .streak-hot {
-  background: linear-gradient(135deg, rgba(251,146,60,0.1), rgba(239,68,68,0.07)) !important;
-  border-color: rgba(249,115,22,0.22) !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(249,115,22,0.14) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04) !important;
 }
 .dark .streak-hot {
-  background: linear-gradient(135deg, rgba(251,146,60,0.14), rgba(239,68,68,0.09)) !important;
-  border-color: rgba(249,115,22,0.28) !important;
+  background: #1c1c1e !important;
+  border-color: rgba(249,115,22,0.18) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 20px rgba(0,0,0,0.35) !important;
 }
+
+/* ─── Apple metric card ───────────────────────────────── */
+/* Clean, neutral card for stats — accent color only on icon/number */
+.metric-card {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.dark .metric-card {
+  background: #1c1c1e;
+  border-color: rgba(255,255,255,0.07);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 20px rgba(0,0,0,0.4);
+}
+.metric-card:active { transform: scale(0.97); }
 
 /* ─── Noise texture overlay (premium feel) ───────────── */
 .noise-overlay {
@@ -1004,16 +1028,18 @@ button, a, [role="button"] {
   animation: shimmer-hover 0.55s ease-out forwards;
 }
 
-/* ─── Improved navbar surface ────────────────────────── */
+/* ─── Improved navbar surface — Apple-style frosted ──── */
 .surface-nav {
-  background: rgba(248,250,252,0.85) !important;
-  border-bottom: 1px solid rgba(0,0,0,0.05) !important;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset;
+  background: rgba(242,242,247,0.88) !important;
+  border-bottom: 0.5px solid rgba(0,0,0,0.1) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
 }
 .dark .surface-nav {
-  background: rgba(13,15,26,0.92) !important;
-  border-bottom-color: rgba(255,255,255,0.045) !important;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset;
+  background: rgba(13,15,26,0.88) !important;
+  border-bottom: 0.5px solid rgba(255,255,255,0.06) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
 }
 
 /* ─── Spring scale micro-interaction ─────────────────── */

@@ -1,47 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface WorkoutTimerProps {
   startTime: string;
+  isPaused?: boolean;
 }
 
-const WorkoutTimer: React.FC<WorkoutTimerProps> = ({ startTime }) => {
+const WorkoutTimer: React.FC<WorkoutTimerProps> = ({ startTime, isPaused = false }) => {
+  const pausedAtRef = useRef<number | null>(null);
+  const totalPausedRef = useRef<number>(0);
   const [elapsed, setElapsed] = useState<number>(0);
 
   useEffect(() => {
-    // Calculate initial elapsed time
     const start = new Date(startTime).getTime();
-    const now = Date.now();
-    setElapsed(Math.floor((now - start) / 1000));
+    setElapsed(Math.floor((Date.now() - start - totalPausedRef.current) / 1000));
 
-    // Update every second
+    if (isPaused) {
+      pausedAtRef.current = Date.now();
+      return;
+    }
+
+    // Resume: accumulate paused duration
+    if (pausedAtRef.current !== null) {
+      totalPausedRef.current += Date.now() - pausedAtRef.current;
+      pausedAtRef.current = null;
+    }
+
     const interval = setInterval(() => {
-      const now = Date.now();
-      setElapsed(Math.floor((now - start) / 1000));
+      setElapsed(Math.floor((Date.now() - start - totalPausedRef.current) / 1000));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [startTime]);
+  }, [startTime, isPaused]);
 
-  // Format time as HH:MM:SS
   const formatTime = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    return `${m}:${String(s).padStart(2, '0')}`;
   };
 
-  return (
-    <div className="text-right">
-      <div className="text-sm text-gray-500 mb-1">Duration</div>
-      <div className="text-3xl font-bold text-blue-600 font-mono">
-        ⏱️ {formatTime(elapsed)}
-      </div>
-    </div>
-  );
+  return <span className="tabular-nums">{formatTime(elapsed)}</span>;
 };
 
 export default WorkoutTimer;

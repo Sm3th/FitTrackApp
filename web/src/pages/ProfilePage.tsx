@@ -158,11 +158,11 @@ const ProfilePage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Hero */}
-      <div className="relative bg-slate-950 overflow-hidden py-12">
+      <div className="relative bg-slate-950 overflow-hidden py-8 sm:py-12">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-violet-600/10" />
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
@@ -170,7 +170,7 @@ const ProfilePage: React.FC = () => {
           <div className="flex items-center justify-between gap-5">
             <div className="flex items-center gap-5">
               <div className="relative flex-shrink-0">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-blue-500/30">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-2xl shadow-lg">
                   {initials}
                 </div>
                 {/* Level badge */}
@@ -260,7 +260,7 @@ const ProfilePage: React.FC = () => {
             </div>
 
             {/* Personal Info Card */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="list-card overflow-hidden">
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-800">
                 <h2 className="font-bold text-gray-900 dark:text-white">{t('profile.personalInfo')}</h2>
                 <button onClick={() => setIsEditing(!isEditing)}
@@ -361,7 +361,7 @@ const ProfilePage: React.FC = () => {
 
             {/* Health Metrics */}
             {profile.height && profile.currentWeight ? (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+              <div className="list-card overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800">
                   <h2 className="font-bold text-gray-900 dark:text-white">{t('profile.healthMetrics')}</h2>
                 </div>
@@ -405,7 +405,7 @@ const ProfilePage: React.FC = () => {
             )}
             {/* Weight Trend Chart */}
             {weightChartData.length >= 2 && (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+              <div className="list-card overflow-hidden">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-800">
                   <h2 className="font-bold text-gray-900 dark:text-white">Weight Trend</h2>
                   <a href="/measurements" className="text-xs font-semibold text-blue-500 hover:text-blue-600 transition-colors">View all →</a>
@@ -497,7 +497,7 @@ const ProfilePage: React.FC = () => {
 
             {/* Training Goals — from onboarding */}
             {(onboarding.goal || onboarding.level || onboarding.daysPerWeek || onboarding.calorieGoal) && (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+              <div className="list-card overflow-hidden">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-800">
                   <h2 className="font-bold text-gray-900 dark:text-white">{t('profile.trainingGoals')}</h2>
                   <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded-full font-medium">{t('profile.fromSetup')}</span>
@@ -536,7 +536,7 @@ const ProfilePage: React.FC = () => {
             )}
 
             {/* Account Actions */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="list-card overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800">
                 <h2 className="font-bold text-gray-900 dark:text-white">{t('profile.account')}</h2>
               </div>

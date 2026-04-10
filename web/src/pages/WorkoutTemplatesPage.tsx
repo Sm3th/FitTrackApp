@@ -132,7 +132,15 @@ const WorkoutTemplatesPage: React.FC = () => {
     const updated = templates.map(t =>
       t.id === template.id ? { ...t, timesUsed: t.timesUsed + 1, lastUsed: new Date().toISOString() } : t
     );
-    setTemplates(updated); saveTemplates(updated); navigate('/workout');
+    setTemplates(updated);
+    saveTemplates(updated);
+    // Pass exercise names and template name to WorkoutPage via navigation state
+    navigate('/workout', {
+      state: {
+        templateName: template.name,
+        suggestedExercises: template.exercises.map(e => e.name),
+      },
+    });
   };
 
   const handleExport = (template: WorkoutTemplate) => {
@@ -188,17 +196,17 @@ const WorkoutTemplatesPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
-      <div className="relative bg-slate-950 overflow-hidden py-12">
+      <div className="relative bg-slate-950 overflow-hidden py-8 sm:py-12">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/20 to-teal-600/10" />
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
-              <p className="text-emerald-400 text-sm font-semibold uppercase tracking-widest mb-2">{t('nav.templates')}</p>
+              <p className="text-emerald-400 text-sm font-semibold uppercase tracking-wide mb-2">{t('nav.templates')}</p>
               <h1 className="text-4xl font-black text-white tracking-tight mb-1">{t('templates.title')}</h1>
               <p className="text-white/40 text-sm">{t('templates.subtitle')}</p>
             </div>
@@ -219,7 +227,7 @@ const WorkoutTemplatesPage: React.FC = () => {
 
         {/* Import */}
         {showImport && (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 mb-6">
+          <div className="list-card p-6 mb-6">
             <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-3">{t('templates.importJson')}</h3>
             <textarea value={importText} onChange={e => setImportText(e.target.value)}
               placeholder={t('templates.importJsonPlaceholder')} rows={5}
@@ -233,7 +241,7 @@ const WorkoutTemplatesPage: React.FC = () => {
 
         {/* Create/Edit Form */}
         {showForm && (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 mb-6">
+          <div className="list-card p-6 mb-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-5">
               {editId ? t('templates.editTemplateTitle') : t('templates.newTemplateTitle')}
             </h2>
@@ -383,7 +391,7 @@ const WorkoutTemplatesPage: React.FC = () => {
 
         {/* Templates Grid */}
         {templates.length === 0 && !showForm ? (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-12 text-center">
+          <div className="list-card p-12 text-center">
             <div className="text-6xl mb-4">📋</div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('templates.noTemplatesYet')}</h3>
             <p className="text-gray-500 mb-6">{t('templates.noTemplatesDesc')}</p>
@@ -394,7 +402,7 @@ const WorkoutTemplatesPage: React.FC = () => {
             {templates.map(template => {
               const groups = buildSupersetGroups(template.exercises);
               return (
-                <div key={template.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden hover:shadow-xl transition-all">
+                <div key={template.id} className="list-card overflow-hidden hover:shadow-xl transition-all">
                   <div className={`bg-gradient-to-r ${template.color} p-5 text-white`}>
                     <div className="flex justify-between items-start">
                       <div>

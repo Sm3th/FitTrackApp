@@ -7,6 +7,7 @@ import {
 } from 'recharts';
 import Navbar from '../components/Navbar';
 import { exportMeasurementsToCsv } from '../utils/csvExporter';
+import { useUnits } from '../hooks/useUnits';
 
 interface Measurement {
   id: string;
@@ -50,9 +51,11 @@ const isGoodUp = (key: string) => !['waist', 'hips', 'bodyFat'].includes(key);
 const BodyMeasurementsPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { weightUnit, cmUnit, fromStorageWeight, fromStorageCm, toStorageWeight, toStorageCm } = useUnits();
 
   const fields = FIELD_META.map(f => ({
     ...f,
+    unit: f.key === 'weight' ? weightUnit : f.key === 'bodyFat' ? '%' : cmUnit,
     label: t(`measurements.${f.key}` as any),
   }));
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
@@ -63,11 +66,38 @@ const BodyMeasurementsPage: React.FC = () => {
   useEffect(() => {
     if (!localStorage.getItem('token')) { navigate('/login'); return; }
     setMeasurements(load());
+    // Hydrate from API
+    apiClient.get('/metrics').then(res => {
+      const items: Measurement[] = ((res.data?.data || res.data) || []).map((r: any) => ({
+        id: String(r.id),
+        date: r.date ? r.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
+        weight: r.weight ?? undefined,
+        bodyFat: r.bodyFat ?? undefined,
+        chest: r.chest ?? undefined,
+        waist: r.waist ?? undefined,
+        hips: r.hips ?? undefined,
+        leftArm: r.arms ?? undefined,
+        rightArm: r.arms ?? undefined,
+        leftThigh: r.legs ?? undefined,
+        rightThigh: r.legs ?? undefined,
+        notes: r.notes ?? undefined,
+      })).sort((a: Measurement, b: Measurement) => a.date.localeCompare(b.date));
+      if (items.length > 0) {
+        setMeasurements(items);
+        save(items);
+      }
+    }).catch(() => {});
   }, [navigate]);
+
+  const cmFields: Array<keyof Measurement> = ['chest', 'waist', 'hips', 'leftArm', 'rightArm', 'leftThigh', 'rightThigh'];
 
   const handleSave = () => {
     if (!form.date) return;
-    const entry: Measurement = { id: Date.now().toString(), date: form.date, ...form };
+    // Convert from display units (lbs/in) back to storage units (kg/cm)
+    const stored: Partial<Measurement> = { ...form };
+    if (stored.weight != null) stored.weight = toStorageWeight(stored.weight);
+    cmFields.forEach(k => { if ((stored as any)[k] != null) (stored as any)[k] = toStorageCm((stored as any)[k]); });
+    const entry: Measurement = { id: Date.now().toString(), date: form.date, ...stored };
     const updated = [...measurements, entry].sort((a, b) => a.date.localeCompare(b.date));
     setMeasurements(updated);
     save(updated);
@@ -89,15 +119,19 @@ const BodyMeasurementsPage: React.FC = () => {
   const earliest = measurements[0];
   const previous = measurements[measurements.length - 2];
 
-  const chartData = useMemo(() =>
-    measurements
+  const chartData = useMemo(() => {
+    const isCm = cmFields.includes(selectedMetric);
+    return measurements
       .filter(m => m[selectedMetric] != null)
       .map(m => ({
-        date:  new Date(m.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        value: m[selectedMetric] as number,
-      })),
-    [measurements, selectedMetric]
-  );
+        date: new Date(m.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        value: selectedMetric === 'weight'
+          ? fromStorageWeight(m[selectedMetric] as number)
+          : isCm
+          ? fromStorageCm(m[selectedMetric] as number)
+          : m[selectedMetric] as number,
+      }));
+  }, [measurements, selectedMetric, fromStorageWeight, fromStorageCm]);
 
   const activeField = fields.find(f => f.key === selectedMetric) || fields[0];
 
@@ -118,17 +152,17 @@ const BodyMeasurementsPage: React.FC = () => {
   const bmiColor = bmi == null ? '' : bmi < 18.5 ? 'text-blue-400' : bmi < 25 ? 'text-emerald-400' : bmi < 30 ? 'text-amber-400' : 'text-red-400';
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Hero */}
-      <div className="relative bg-slate-950 overflow-hidden py-12">
+      <div className="relative bg-slate-950 overflow-hidden py-8 sm:py-12">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/10" />
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
           <div>
-            <p className="text-purple-400 text-sm font-bold uppercase tracking-widest mb-1">{t('measurements.bodyTracking')}</p>
+            <p className="text-purple-400 text-sm font-bold uppercase tracking-wide mb-1">{t('measurements.bodyTracking')}</p>
             <h1 className="text-4xl font-black text-white tracking-tight mb-1">{t('measurements.title')}</h1>
             <p className="text-white/40 text-sm">{t('measurements.entriesRecorded', { count: measurements.length })}</p>
           </div>
@@ -152,7 +186,7 @@ const BodyMeasurementsPage: React.FC = () => {
 
         {/* Add Form — bottom sheet on mobile */}
         {showForm && (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
+          <div className="list-card p-6">
             <h2 className="text-lg font-black text-gray-900 dark:text-white mb-5">{t('measurements.newEntry')}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
               <div className="col-span-2 sm:col-span-1">
@@ -195,7 +229,7 @@ const BodyMeasurementsPage: React.FC = () => {
         )}
 
         {measurements.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-14 text-center">
+          <div className="list-card p-14 text-center">
             <div className="w-20 h-20 bg-purple-500/10 border border-purple-500/20 rounded-3xl flex items-center justify-center mx-auto mb-4 text-4xl">📏</div>
             <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">{t('measurements.noMeasurementsYet')}</h3>
             <p className="text-gray-400 dark:text-gray-500 text-sm mb-6">{t('measurements.noMeasurementsDesc')}</p>
@@ -213,7 +247,7 @@ const BodyMeasurementsPage: React.FC = () => {
                 const totalDelta = getDelta(f.key, earliest, latest);
                 const good = delta != null ? (isGoodUp(String(f.key)) ? delta >= 0 : delta <= 0) : true;
                 return (
-                  <div key={String(f.key)} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-4 shadow-sm">
+                  <div key={String(f.key)} className="list-card p-4">
                     <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${f.grad} flex items-center justify-center mb-3 shadow-sm`}>
                       <span className="text-white text-xs font-black">{f.unit}</span>
                     </div>
@@ -237,7 +271,7 @@ const BodyMeasurementsPage: React.FC = () => {
 
               {/* BMI card */}
               {bmi && (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-4 shadow-sm">
+                <div className="list-card p-4">
                   <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center mb-3 shadow-sm">
                     <span className="text-white text-xs font-black">BMI</span>
                   </div>
@@ -249,7 +283,7 @@ const BodyMeasurementsPage: React.FC = () => {
             </div>
 
             {/* Area Chart */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="list-card overflow-hidden">
               {/* Metric selector */}
               <div className="px-5 pt-5 pb-3 border-b border-gray-50 dark:border-slate-800">
                 <h3 className="text-sm font-black text-gray-900 dark:text-white mb-3">{t('measurements.progressChart')}</h3>
@@ -304,7 +338,7 @@ const BodyMeasurementsPage: React.FC = () => {
             </div>
 
             {/* History table */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="list-card overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-50 dark:border-slate-800 flex items-center justify-between">
                 <h3 className="font-black text-gray-900 dark:text-white text-sm">{t('measurements.history')}</h3>
                 <span className="text-xs text-gray-400 bg-gray-50 dark:bg-slate-800 px-2.5 py-1 rounded-full font-semibold">{measurements.length} {t('measurements.entries')}</span>

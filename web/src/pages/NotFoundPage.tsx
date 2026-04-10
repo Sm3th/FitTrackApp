@@ -56,7 +56,7 @@ const NotFoundPage: React.FC = () => {
 
         {/* Quick links */}
         <div className="mt-10 pt-8 border-t border-white/10">
-          <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mb-4">{t('notFound.quickLinks')}</p>
+          <p className="text-xs text-slate-500 uppercase tracking-wide font-bold mb-4">{t('notFound.quickLinks')}</p>
           <div className="flex flex-wrap gap-2 justify-center">
             {[
               { label: 'Workout', path: '/workout' },

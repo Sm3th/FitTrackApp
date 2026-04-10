@@ -54,7 +54,7 @@ const MuscleHeatmap: React.FC<Props> = ({ muscleBreakdown }) => {
       <div className="flex gap-8 flex-wrap justify-center">
         {/* FRONT VIEW */}
         <div className="flex flex-col items-center gap-2">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Front</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Front</p>
           <svg width="120" height="240" viewBox="0 0 120 240" className="overflow-visible">
             {/* Body outline */}
             <g stroke="#475569" strokeWidth="1.5" fill="none" opacity="0.6">
@@ -122,7 +122,7 @@ const MuscleHeatmap: React.FC<Props> = ({ muscleBreakdown }) => {
 
         {/* BACK VIEW */}
         <div className="flex flex-col items-center gap-2">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Back</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Back</p>
           <svg width="120" height="240" viewBox="0 0 120 240" className="overflow-visible">
             {/* Body outline (same as front, mirrored) */}
             <g stroke="#475569" strokeWidth="1.5" fill="none" opacity="0.6">
@@ -188,7 +188,7 @@ const MuscleHeatmap: React.FC<Props> = ({ muscleBreakdown }) => {
           return (
             <div key={key} className={`rounded-xl p-2 text-center transition-all ${val > 0 ? 'bg-orange-50 dark:bg-orange-950/30' : 'bg-gray-50 dark:bg-slate-800/30'}`}>
               <div className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">{label}</div>
-              <div className={`text-sm font-black ${val > 0 ? 'text-orange-500' : 'text-gray-300 dark:text-gray-600'}`}>
+              <div className={`text-sm font-black ${val > 0 ? 'text-orange-500' : 'text-gray-300 dark:text-gray-400'}`}>
                 {val > 0 ? `${val}` : '—'}
               </div>
               {val > 0 && (
@@ -205,7 +205,7 @@ const MuscleHeatmap: React.FC<Props> = ({ muscleBreakdown }) => {
       {/* Top 3 */}
       {sorted.length > 0 && (
         <div className="w-full">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Most Trained This Period</p>
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Most Trained This Period</p>
           <div className="flex gap-2">
             {sorted.map(([key, val], i) => (
               <div key={key} className="flex-1 bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-200 dark:border-orange-900/40 rounded-xl p-3 text-center">

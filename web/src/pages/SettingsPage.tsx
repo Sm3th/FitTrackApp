@@ -12,7 +12,7 @@ type Units = 'metric' | 'imperial';
 
 // ── Section wrapper ───────────────────────────────────────────────────────────
 const Section: React.FC<{ title: string; icon: string; children: React.ReactNode }> = ({ title, icon, children }) => (
-  <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
+  <div className="list-card overflow-hidden">
     <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center gap-2.5">
       <span className="text-lg">{icon}</span>
       <h2 className="font-semibold text-gray-900 dark:text-white text-sm">{title}</h2>
@@ -50,7 +50,7 @@ const Toggle: React.FC<{ checked: boolean; onChange: () => void }> = ({ checked,
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { theme, colorTheme, fontSize, toggleTheme, setColorTheme, setFontSize } = useTheme();
+  const { theme, colorTheme, fontSize, toggleTheme, setColorTheme, setCustomColor, setFontSize } = useTheme();
   const { i18n } = useTranslation();
   const { toast, showToast, hideToast } = useToast();
 
@@ -136,8 +136,31 @@ const SettingsPage: React.FC = () => {
     { value: 'green',  label: 'Green',  from: '#10b981', to: '#14b8a6' },
   ];
 
+  const handleImportData = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string);
+        let restored = 0;
+        const skip = ['exportedAt', 'token'];
+        Object.entries(data).forEach(([key, val]) => {
+          if (skip.includes(key)) return;
+          localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+          restored++;
+        });
+        showToast(`Restored ${restored} items — reload to apply`, 'success');
+      } catch {
+        showToast('Invalid backup file', 'error');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors">
+    <div className="min-h-screen">
       <Navbar />
 
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-5">
@@ -177,7 +200,7 @@ const SettingsPage: React.FC = () => {
 
           <div className="border-t border-gray-100 dark:border-slate-800 pt-4">
             <p className="text-sm font-medium text-gray-900 dark:text-white mb-3">Color Theme</p>
-            <div className="flex gap-2.5">
+            <div className="flex items-center gap-2.5 flex-wrap">
               {colorOptions.map(c => (
                 <button
                   key={c.value}
@@ -189,7 +212,29 @@ const SettingsPage: React.FC = () => {
                   style={{ background: `linear-gradient(135deg, ${c.from}, ${c.to})` }}
                 />
               ))}
+              {/* Custom color picker */}
+              <label
+                title="Custom color"
+                className={`relative w-9 h-9 rounded-xl overflow-hidden cursor-pointer transition-all duration-150 hover:scale-105 ${
+                  colorTheme === 'custom' ? 'ring-2 ring-offset-2 ring-gray-400 dark:ring-offset-slate-900 scale-110' : ''
+                }`}
+                style={{
+                  background: colorTheme === 'custom'
+                    ? localStorage.getItem('customColor') || '#6366f1'
+                    : 'conic-gradient(red,yellow,lime,aqua,blue,magenta,red)',
+                }}
+              >
+                <input
+                  type="color"
+                  defaultValue={localStorage.getItem('customColor') || '#6366f1'}
+                  onChange={e => setCustomColor(e.target.value)}
+                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                />
+              </label>
             </div>
+            {colorTheme === 'custom' && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Custom color active — pick any color above</p>
+            )}
           </div>
 
           <div className="border-t border-gray-100 dark:border-slate-800 pt-4">
@@ -289,6 +334,12 @@ const SettingsPage: React.FC = () => {
               Export
             </button>
           </Row>
+          <Row label="Import / Restore" desc="Restore from a FitTrack backup file">
+            <label className="text-xs font-medium px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+              Import
+              <input type="file" accept=".json,application/json" onChange={handleImportData} className="hidden" />
+            </label>
+          </Row>
           <Row label="Clear Local Data" desc="Remove cached data (workouts kept in DB)">
             <button
               onClick={handleClearData}
@@ -350,7 +401,7 @@ const SettingsPage: React.FC = () => {
           </button>
         )}
 
-        <p className="text-center text-xs text-gray-400 dark:text-gray-600 pb-4">
+        <p className="text-center text-xs text-gray-400 dark:text-gray-500 pb-4">
           FitTrack Pro © {new Date().getFullYear()}
         </p>
       </div>

@@ -148,16 +148,16 @@ const WaterIntakePage: React.FC = () => {
   const { msg, color } = encouragement();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Hero */}
-      <div className="relative bg-slate-950 overflow-hidden py-12">
+      <div className="relative bg-slate-950 overflow-hidden py-8 sm:py-12">
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/20 to-blue-600/10" />
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)', backgroundSize: '40px 40px' }} />
         <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-cyan-400 text-sm font-semibold uppercase tracking-widest mb-2">Hydration</p>
+          <p className="text-cyan-400 text-sm font-semibold uppercase tracking-wide mb-2">Hydration</p>
           <h1 className="text-4xl font-black text-white tracking-tight mb-1">{t('water.title')}</h1>
           <p className="text-white/40 text-sm">{t('water.subtitle')}</p>
         </div>
@@ -168,20 +168,20 @@ const WaterIntakePage: React.FC = () => {
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: t('water.remaining'), value: remaining >= 1000 ? `${(remaining/1000).toFixed(1)}L` : `${remaining}ml`, sub: t('common.today'), icon: '🎯', color: 'text-blue-500' },
-            { label: t('water.streak'), value: `${streak}${t('water.days')}`, sub: t('water.days'), icon: '🔥', color: 'text-orange-500' },
-            { label: t('water.entries'), value: log.entries.length, sub: t('common.today'), icon: '📋', color: 'text-violet-500' },
+            { label: t('water.remaining'), value: remaining >= 1000 ? `${(remaining/1000).toFixed(1)}L` : `${remaining}ml`, icon: '🎯', hexColor: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
+            { label: t('water.streak'),    value: `${streak}d`,                                                              icon: '🔥', hexColor: '#f97316', bg: 'rgba(249,115,22,0.1)' },
+            { label: t('water.entries'),   value: log.entries.length,                                                        icon: '💧', hexColor: '#06b6d4', bg: 'rgba(6,182,212,0.1)'  },
           ].map(s => (
-            <div key={s.label} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-4 text-center shadow-sm">
-              <div className="text-xl mb-1">{s.icon}</div>
-              <div className={`text-xl font-black ${s.color}`}>{s.value}</div>
-              <div className="text-xs text-gray-400 mt-0.5">{s.sub}</div>
+            <div key={s.label} className="metric-card p-4 text-center">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center mx-auto mb-2 text-base" style={{ background: s.bg }}>{s.icon}</div>
+              <div className="text-xl font-black tabular-nums leading-none mb-0.5" style={{ color: s.hexColor }}>{s.value}</div>
+              <div className="text-[11px] text-gray-400 font-medium">{s.label}</div>
             </div>
           ))}
         </div>
 
         {/* Main tracker */}
-        <div className={`bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-8 text-center transition-all duration-300 ${justAdded ? 'ring-2 ring-blue-400/60' : ''}`}>
+        <div className={`list-card p-8 text-center transition-all duration-300 ${justAdded ? 'ring-2 ring-blue-400/60' : ''}`}>
           <div className="flex justify-center mb-5">
             <CircleRing progress={progress} total={totalToday} goal={log.goal} />
           </div>
@@ -214,7 +214,7 @@ const WaterIntakePage: React.FC = () => {
         </div>
 
         {/* Goal */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-5">
+        <div className="list-card p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <span className="text-lg">🎯</span> {t('water.dailyGoal')}
@@ -249,7 +249,7 @@ const WaterIntakePage: React.FC = () => {
 
         {/* Today's log */}
         {log.entries.length > 0 && (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div className="list-card overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
               <h3 className="font-bold text-gray-900 dark:text-white">{t('water.todayLog')}</h3>
               <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-2.5 py-1 rounded-full font-semibold">
@@ -280,7 +280,7 @@ const WaterIntakePage: React.FC = () => {
 
         {/* 7-day history */}
         {history.length > 1 && (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-5">
+          <div className="list-card p-5">
             <h3 className="font-bold text-gray-900 dark:text-white mb-4">{t('water.history')}</h3>
             <div className="space-y-3">
               {history.map(day => {
